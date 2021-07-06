@@ -231,8 +231,8 @@ class CurrencyInput {
         if (input.match(new RegExp(regex)) === null ||
         (this.min !== false && checkValue < this.min) ||
         (this.max !== false && checkValue > this.max) ||
-        checkValue > 999999999999999 / Math.pow(10, decimals) ||
-        checkValue < -999999999999999 / Math.pow(10, decimals) ||
+        checkValue > 999999999999999 / Math.pow(10, (this.disableCents ? 0 : decimals)) ||
+        checkValue < -999999999999999 / Math.pow(10, (this.disableCents ? 0 : decimals)) ||
         this.getEventValue(e).includes('-'+this.getSeparationCharacter())) {
             if (this.preventInputFromIME && e.type == 'compositionend') this.target.value = this.target.value.replace(e.data, '');
             if (typeof this.invalidCallback == 'function' && this.target.value != input) this.invalidCallback();

@@ -16,7 +16,7 @@ class CurrencyInput {
     format() {
         const sap = this.getCurrencySymbolAndPosition();
         const decimalChar = this.getDecimalCharacter();
-        const separationChar = this.getseparationCharacter();
+        const separationChar = this.getSeparationCharacter();
         let input = this.defaultValue;
         const jumpAhead = (this.target.value.length == 1 && sap.displayBefore) ? 1 : 0;
         if (typeof event != 'undefined') {
@@ -45,7 +45,7 @@ class CurrencyInput {
         }
 
         input = input.replaceAll(new RegExp('\\'+this.getDecimalCharacter(true),'g'), '/');
-        input = input.replaceAll(new RegExp('\\'+this.getseparationCharacter(true),'g'), separationChar);
+        input = input.replaceAll(new RegExp('\\'+this.getSeparationCharacter(true),'g'), separationChar);
         input = input.replaceAll('/', decimalChar);
         const start = this.target.selectionStart;
         const end = this.target.selectionEnd;
@@ -69,11 +69,11 @@ class CurrencyInput {
         this.currencyDisplayFallback = (typeof options.currencyDisplayFallback == 'string') ? options.currencyDisplayFallback : 'code';
         this.decimalCharacter = options.decimalCharacter;
         this.separationCharacter = options.separationCharacter;
-        if (this.getDecimalCharacter() == this.getseparationCharacter()) {
+        if (this.getDecimalCharacter() == this.getSeparationCharacter()) {
             throw new TypeError('Decimal and separation characters must not be the same.');
         }
 
-        if (this.getDecimalCharacter() == '/' || this.getseparationCharacter() == '/') {
+        if (this.getDecimalCharacter() == '/' || this.getSeparationCharacter() == '/') {
             throw new TypeError('The devider characters must not be a forward slash.');
         }
 
@@ -148,7 +148,7 @@ class CurrencyInput {
         }
         return this.decimalCharacter[0];
     }
-    getseparationCharacter(getOriginal = false) {
+    getSeparationCharacter(getOriginal = false) {
         if (typeof this.separationCharacter != 'string' || getOriginal) {
             return (1000).toLocaleString(this.locale, {
                 style: 'currency',
@@ -196,7 +196,7 @@ class CurrencyInput {
     getValueAsFloat() {
         let value = this.target.value
             .replaceAll(this.getCurrencySymbolAndPosition().symbol, '')
-            .replaceAll(new RegExp('\\'+this.getseparationCharacter(), 'g'), '')
+            .replaceAll(new RegExp('\\'+this.getSeparationCharacter(), 'g'), '')
             .replaceAll(new RegExp('\\'+this.getDecimalCharacter(), 'g'), '.')
             .replaceAll(/\s/g,'');
         return parseFloat(value);
@@ -208,7 +208,7 @@ class CurrencyInput {
     }
     validateInput(e) {
         const sap = this.getCurrencySymbolAndPosition();
-        const input = this.getEventValue(e).replaceAll(sap.symbol, '').replaceAll(new RegExp('\\'+this.getseparationCharacter(), 'g'), '').replaceAll(/\s/g,'');
+        const input = this.getEventValue(e).replaceAll(sap.symbol, '').replaceAll(new RegExp('\\'+this.getSeparationCharacter(), 'g'), '').replaceAll(/\s/g,'');
         const decimalChar = this.getDecimalCharacter();
         const decimals = this.getCurrencyDecimalCount();
         let regex = '^';
@@ -233,7 +233,7 @@ class CurrencyInput {
         (this.max !== false && checkValue > this.max) ||
         checkValue > 999999999999999 / Math.pow(10, decimals) ||
         checkValue < -999999999999999 / Math.pow(10, decimals) ||
-        this.getEventValue(e).includes('-'+this.getseparationCharacter())) {
+        this.getEventValue(e).includes('-'+this.getSeparationCharacter())) {
             if (this.preventInputFromIME && e.type == 'compositionend') this.target.value = this.target.value.replace(e.data, '');
             if (typeof this.invalidCallback == 'function' && this.target.value != input) this.invalidCallback();
             if (typeof e.synthetic == 'undefined') e.preventDefault();

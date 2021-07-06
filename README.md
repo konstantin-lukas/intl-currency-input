@@ -134,8 +134,3 @@ This method will return the decimal character currently used as a `string`. If y
 ```javascript
 cinput.getDecimalCharacter();
 ```
-### `getDecimalCharacter(getOriginal)`
-This method will return the decimal character currently used as a `string`. If you set a custom character it will return that, otherwise the return value will depend on the locale you set. The parameter `getOriginal` is optional and if set to true, will make the function always return the locale based value and never the one set by the user.
-```javascript
-cinput.getDecimalCharacter();
-```

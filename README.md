@@ -1,10 +1,22 @@
 # intl-currency-input
 This is a dependency-free easy-to-use vanilla JavaScript addon allowing you to create HTML currency inputs with various different currencies and formats. It doesn't require any additional markup or stylesheets.
-## Usage
-Download the intl-currency-input.min.js file and include it on your html page.
+## Installation
+First you need to include the plugin in your project. You can download it  or you can install it via NPM.
+### Download
+You can download the package from github right [here](https://github.com/konstantin-lukas/intl-currency-input/releases/tag/1.0.0). After you placed the file in your project, just add a reference to your HTML page.
 ```html
 <script src="path-to-file/intl-currency-input.min.js"></script>
 ```
+### NPM
+If you are working with Node perhaps you want to consider downloading the NPM package instead. Just run this command in your project folder.
+```bash
+npm i intl-currency-input --save
+```
+Afterwards you can import it like so.
+```javascript
+const { CurrencyInput } = require('intl-currency-input');
+```
+## Usage
 To create a new currency input, first create a simple HTML text input.
 ```html
 <input type="text" name="currency" placeholder="Insert mad bucks">

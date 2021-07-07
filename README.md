@@ -1,7 +1,7 @@
 # intl-currency-input
 This is a dependency-free easy-to-use vanilla JavaScript addon allowing you to create HTML currency inputs with various different currencies and formats. It doesn't require any additional markup or stylesheets.
 ## Installation
-First you need to include the plugin in your project. You can download it  or you can install it via NPM.
+First you need to include the plugin in your project. There are various ways you can do this.
 ### Download
 You can download the package from github right [here](https://github.com/konstantin-lukas/intl-currency-input/releases/tag/1.0.0). After you placed the file in your project, just add a reference to your HTML page.
 ```html

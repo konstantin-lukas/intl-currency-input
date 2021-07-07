@@ -7,6 +7,11 @@ You can download the package from github right [here](https://github.com/konstan
 ```html
 <script src="path-to-file/intl-currency-input.min.js"></script>
 ```
+### CDN
+You can also use jsDelivr to use the script externally. For production it is recommended to specify a version number.
+```html
+<script src="https://cdn.jsdelivr.net/gh/konstantin-lukas/intl-currency-input/intl-currency-input.min.js"></script>
+```
 ### NPM
 If you are working with Node perhaps you want to consider downloading the NPM package instead. Just run this command in your project folder.
 ```bash

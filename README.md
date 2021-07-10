@@ -1,5 +1,5 @@
 # intl-currency-input
-This is a dependency-free easy-to-use vanilla JavaScript addon allowing you to create HTML currency inputs with various different currencies and formats. It doesn't require any additional markup or stylesheets.
+This is a dependency-free easy-to-use vanilla JavaScript addon allowing you to create HTML currency inputs with various different currencies and formats. It doesn't require any additional markup or stylesheets. Check out [this CodePen](https://codepen.io/konstantin-lukas/pen/oNWzwOP) to try it out!
 ## Installation
 First you need to include the plugin in your project. There are various ways you can do this.
 ### Download

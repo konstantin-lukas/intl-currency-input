@@ -18,12 +18,14 @@ class CurrencyInput {
         const decimalChar = this.getDecimalCharacter();
         const separationChar = this.getSeparationCharacter();
         let input = this.defaultValue;
-        const jumpAhead = (this.target.value.length == 1 && sap.displayBefore) ? 1 : 0;
+        const jumpAhead = (this.target.value.length == 1 && sap.displayBefore) ? sap.symbol.length : 0;
         if (typeof event != 'undefined') {
             input = this.getEventValue(event).replaceAll(sap.symbol, '');
             var sepBef = (separationChar != '') ? input.length : 0;
-            input = input.replaceAll(new RegExp('\\'+separationChar, 'g'), '').replaceAll(new RegExp('\\'+decimalChar, 'g'), '.').replaceAll(/\s/g,'');
-            var endsWithDecimalBreak = input.substr(input.length - 1) == '.';
+            if (separationChar != '') input = input.replaceAll(new RegExp('\\'+separationChar, 'g'), '');
+            input = input.replaceAll(new RegExp('\\'+decimalChar, 'g'), '.').replaceAll(/\s/g,'');
+            const decimalRegex = new RegExp(`^[^\\.]*\\.(\\d{0,${this.getCurrencyDecimalCount()}})?$`)
+            var endsWithDecimalBreak = input.match(decimalRegex) != null;
             if (endsWithDecimalBreak) {
                 input += '1';
             }
@@ -37,20 +39,17 @@ class CurrencyInput {
             }
             input = parseFloat(input);
         }
-
         if (isNaN(input)) return;
         input = input.toLocaleString(this.locale);
         if (endsWithDecimalBreak) {
             input = input.slice(0, -1);
         }
-
         input = input.replaceAll(new RegExp('\\'+this.getDecimalCharacter(true),'g'), '/');
         input = input.replaceAll(new RegExp('\\'+this.getSeparationCharacter(true),'g'), separationChar);
         input = input.replaceAll('/', decimalChar);
         const start = this.target.selectionStart;
         const end = this.target.selectionEnd;
         const sepAft = (separationChar != '') ? input.length : 0;
-
         if (sap.displayBefore) {
             this.target.value = (input < 0) ? '-' + sap.symbol + input.substring(1) : sap.symbol + input;
         } else {
@@ -158,7 +157,7 @@ class CurrencyInput {
                 maximumFractionDigits: 0
             }).replace(this.currency, '').replaceAll(/(\d)*/g, '').trim()[0];
         }
-        return this.separationCharacter[0];
+        return this.separationCharacter == '' ? '' : this.separationCharacter[0];
     }
     getCurrencyDecimalCount() {
         const decimalTest = new Intl.NumberFormat('en', { style: 'currency', currency: this.currency, signDisplay: 'never', currencyDisplay: 'code' }).format(1).substr(4);
@@ -208,7 +207,9 @@ class CurrencyInput {
     }
     validateInput(e) {
         const sap = this.getCurrencySymbolAndPosition();
-        const input = this.getEventValue(e).replaceAll(sap.symbol, '').replaceAll(new RegExp('\\'+this.getSeparationCharacter(), 'g'), '').replaceAll(/\s/g,'');
+        const sepChar = this.getSeparationCharacter();
+        let input = this.getEventValue(e).replaceAll(sap.symbol, '').replaceAll(/\s/g,'');
+        if (sepChar != '') input = input.replaceAll(new RegExp('\\'+sepChar, 'g'), '')
         const decimalChar = this.getDecimalCharacter();
         const decimals = this.getCurrencyDecimalCount();
         let regex = '^';

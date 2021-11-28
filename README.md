@@ -98,14 +98,14 @@ preventInputFromIME: false //This will allow all kinds of crazy input like 'お�
 ### `validCallback`
 This is a `function` to call when the user makes a correct input.
 ```javascript
-validCallback: function () { //This will execute whenever the user makes a correct input.
+validCallback: () => { //This will execute whenever the user makes a correct input.
     console.log('That\'s a valid input.');
 }
 ```
 ### `invalidCallback`
 This is a `function` to call when the user makes an incorrect input.
 ```javascript
-invalidCallback: function () { //This will execute for instance when trying to enter a letter.
+invalidCallback: () => { //This will execute for instance when trying to enter a letter.
     console.log('That\'s not a valid input.');
 }
 ```
@@ -128,8 +128,9 @@ cinput.getValueAsInt(); // returns an integer value like 9999
 ```
 ### `reinit(options)`
 Use this function if you need to change any of the settings. This takes an `options` object as an optional parameter just like the constructor method. If you omit the `options`, everything will be set to default. In case you need to change the html target element, just create a new instance of `CurrencyInput`.
+
 ```javascript
-cinput.reinit({ //This would display '10,000 日本円' by default.
+cinput.reInit({ //This would display '10,000 日本円' by default.
     currency: 'JPY',
     locale: 'ja',
     currencyDisplay: 'name',

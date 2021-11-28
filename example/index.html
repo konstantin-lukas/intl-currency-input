@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <title>International Currency Input</title>
+    <script src="../intl-currency-input.js"></script>
+</head>
+<body>
+    <input type="text">
+    <script>const input = 'input';
+    const options = {
+        currency: 'EUR',
+        locale: 'de',
+        invalidCallback: () => {
+            console.log();
+        }
+    }
+    const cInput = new CurrencyInput(input, options);</script>
+</body>
+</html>

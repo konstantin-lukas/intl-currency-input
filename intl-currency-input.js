@@ -13,7 +13,7 @@ class CurrencyInput {
         this.target.addEventListener('input', this.format.bind(this));
 
     }
-    format() {
+    format(event) {
         const sap = this.getCurrencySymbolAndPosition();
         const decimalChar = this.getDecimalCharacter();
         const separationChar = this.getSeparationCharacter();

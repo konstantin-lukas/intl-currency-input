@@ -98,14 +98,14 @@ preventInputFromIME: false //This will allow all kinds of crazy input like '„ÅäÈ
 ### `validCallback`
 This is a `function` to call when the user makes a correct input.
 ```javascript
-validCallback: function () { //This will execute whenever the user makes a correct input.
+validCallback: function() { //This will execute whenever the user makes a correct input.
     console.log('That\'s a valid input.');
 }
 ```
 ### `invalidCallback`
 This is a `function` to call when the user makes an incorrect input.
 ```javascript
-invalidCallback: function () { //This will execute for instance when trying to enter a letter.
+invalidCallback: function() { //This will execute for instance when trying to enter a letter.
     console.log('That\'s not a valid input.');
 }
 ```

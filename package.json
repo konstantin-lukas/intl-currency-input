@@ -1,0 +1,31 @@
+{
+  "name": "intl-currency-input",
+  "version": "2.0.0",
+  "description": "This library allows you to create input fields for currencies. Version 2 is completely overhauled, written in TypeScript and includes test cases.",
+  "main": "intl-currency-input.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/konstantin-lukas/intl-currency-input.git"
+  },
+  "author": "Konstantin Lukas",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/konstantin-lukas/intl-currency-input/issues"
+  },
+  "homepage": "https://github.com/konstantin-lukas/intl-currency-input#readme",
+  "devDependencies": {
+    "@types/jest": "^29.4.0",
+    "http-server": "^14.1.1",
+    "jest": "^29.4.3",
+    "ts-jest": "^29.0.5",
+    "ts-loader": "^9.4.2",
+    "typedoc": "^0.23.28",
+    "typescript": "^4.9.5",
+    "webpack": "^5.75.0",
+    "webpack-cli": "^5.0.1",
+    "webpack-dev-server": "^4.11.1"
+  }
+}

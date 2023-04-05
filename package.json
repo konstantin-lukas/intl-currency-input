@@ -4,7 +4,29 @@
   "description": "This library allows you to create input fields for currencies. Version 2 is completely overhauled, written in TypeScript and includes test cases.",
   "main": "intl-currency-input.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build-all-production": "npm run build-cjs-production && npm run build-umd-production && npm run build-var-production",
+    "build-cjs-development": "webpack --env configType=cjs production=false",
+    "build-cjs-production": "webpack --env configType=cjs production=true",
+    "build-umd-development": "webpack --env configType=umd production=false",
+    "build-umd-production": "webpack --env configType=umd production=true",
+    "build-var-development": "webpack --env configType=var production=false",
+    "build-var-production": "webpack --env configType=var production=true",
+    "run-cjs-development": "webpack --env configType=cjs production=false && node ./tests/main.js",
+    "run-umd-development": "webpack --env configType=umd production=false && node ./tests/main.js",
+    "run-var-development": "webpack --env configType=var production=false && node ./tests/main.js",
+    "serve-cjs-development": "webpack-dev-server --env configType=cjs production=false",
+    "serve-cjs-production": "webpack-dev-server --env configType=cjs production=true",
+    "serve-umd-development": "webpack-dev-server --env configType=umd production=false",
+    "serve-umd-production": "webpack-dev-server --env configType=umd production=true",
+    "serve-var-development": "webpack-dev-server --env configType=var production=false",
+    "serve-var-production": "webpack-dev-server --env configType=var production=true",
+    "test-all": "jest --coverage",
+    "test-money": "jest money.test.ts --coverage  --collectCoverageFrom=src/money.ts",
+    "test-money-calculator": "jest money_calculator.test.ts --coverage  --collectCoverageFrom=src/money_calculator.ts",
+    "test-money-formatter": "jest money_formatter.test.ts --coverage  --collectCoverageFrom=src/money_formatter.ts",
+    "generate-documentation": "typedoc",
+    "serve-integration": "http-server",
+    "run-integration-cjs": "node integration.js"
   },
   "repository": {
     "type": "git",
@@ -15,6 +37,7 @@
   "bugs": {
     "url": "https://github.com/konstantin-lukas/intl-currency-input/issues"
   },
+  "type": "module",
   "homepage": "https://github.com/konstantin-lukas/intl-currency-input#readme",
   "devDependencies": {
     "@types/jest": "^29.4.0",

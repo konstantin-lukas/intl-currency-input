@@ -1,13 +1,12 @@
 import path from 'path';
 const __dirname = path.resolve();
 const varConfig = {
-    entry: './src/index.ts',
+    entry: './src/intl-currency-input.ts',
     output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: 'moneydew.js',
+        filename: 'intl-currency-input.js',
         library: {
-            type: 'var',
-            name: 'moneydew'
+            type: 'global'
         }
     },
     module: {
@@ -36,10 +35,10 @@ const varConfig = {
     mode: 'development'
 };
 const umdConfig = {
-    entry: './src/index.ts',
+    entry: './src/intl-currency-input.ts',
     output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: 'moneydew.umd.js',
+        filename: 'intl-currency-input.umd.js',
         library: {
             type: 'umd'
         },
@@ -71,10 +70,10 @@ const umdConfig = {
     mode: 'development'
 };
 const cjsConfig = {
-    entry: './src/index.ts',
+    entry: './src/intl-currency-input.ts',
     output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: 'moneydew.commonjs.cjs',
+        filename: 'intl-currency-input.commonjs.cjs',
         library: {
             type: 'commonjs'
         }

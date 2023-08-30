@@ -6,7 +6,8 @@ const varConfig = {
         path: path.resolve(__dirname, 'dist'),
         filename: 'intl-currency-input.js',
         library: {
-            type: 'global'
+            type: 'var',
+            name: 'Ici'
         }
     },
     module: {

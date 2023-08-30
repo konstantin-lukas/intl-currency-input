@@ -1,1 +1,1 @@
-const input = new IntlCurrencyInput(document.getElementById('inputParent'));
+const input = new Ici.IntlCurrencyInput(document.getElementById('inputParent'));

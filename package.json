@@ -21,9 +21,6 @@
     "serve-var-development": "webpack-dev-server --env configType=var production=false",
     "serve-var-production": "webpack-dev-server --env configType=var production=true",
     "test-all": "jest --coverage",
-    "test-money": "jest money.test.ts --coverage  --collectCoverageFrom=src/money.ts",
-    "test-money-calculator": "jest money_calculator.test.ts --coverage  --collectCoverageFrom=src/money_calculator.ts",
-    "test-money-formatter": "jest money_formatter.test.ts --coverage  --collectCoverageFrom=src/money_formatter.ts",
     "generate-documentation": "typedoc",
     "serve-integration": "http-server",
     "run-integration-cjs": "node integration.js"
@@ -50,5 +47,8 @@
     "webpack": "^5.75.0",
     "webpack-cli": "^5.0.1",
     "webpack-dev-server": "^4.11.1"
+  },
+  "dependencies": {
+    "moneydew": "^0.0.1"
   }
 }

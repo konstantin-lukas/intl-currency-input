@@ -1,89 +1,64 @@
+import {Money} from "moneydew/dist/money";
+import {MoneyFormatter} from "moneydew/dist/money_formatter";
+
 export class IntlCurrencyInput {
     private _container: HTMLElement;
-    private _parent: HTMLElement;
-    private _symbol: HTMLElement;
-    private _symbolSeparator: HTMLElement;
-    private _number: HTMLElement;
-    private _name: HTMLElement;
-    private _nameSeparator: HTMLElement;
+    private _input: HTMLElement;
+    private _money: Money;
+    private _previousValue: string;
+    private _formatter: MoneyFormatter;
 
     constructor(containerElement : HTMLElement) {
+        this._money = new Money('0.00');
+        this._formatter = new MoneyFormatter({
+            currencyName: 'USD'
+        });
+        this._previousValue = this._formatter.format(this._money);
+
         this._container = containerElement;
-        this._parent = document.createElement('div');
 
-        this._symbol = document.createElement('span');
-        this._symbol.classList.add('ici-symbol');
-        this._symbol.innerText = '$';
+        this._input = document.createElement('span');
+        this._input.classList.add('ici-input');
+        this._input.innerText = this._formatter.format(this._money);
+        this._input.contentEditable = 'true';
+        this._input.style.outline = 'none';
+        this._input.setAttribute('spellcheck', 'false');
 
-        this._symbolSeparator = document.createElement('span');
-        this._symbolSeparator.classList.add('ici-symbol-separator');
-        this._symbolSeparator.innerText = ' ';
+        const esc = (string: string) => {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        }
 
-        const cancelEvent = (e: Event) => {
-            e.preventDefault();
-            e.stopPropagation();
-        };
+        this._input.addEventListener('input', (e: Event) => {
+            if (!(e instanceof InputEvent) ||  e.type !== 'input') return;
+            let string: string = '^';
+            string += esc(this._formatter.prefix(this._money.isNegative));
+            string += '(0|';
+            string += '0'+ esc(this._formatter.decimalSeparator) + '\\d{0,' + this._money.floatingPointPrecision + '}|';
+            string += '[1-9]\\d*|';
+            string += '[1-9]\\d*' + esc(this._formatter.decimalSeparator) + '\\d{0,' + this._money.floatingPointPrecision + '})';
+            string += esc(this._formatter.suffix(this._money.isNegative));
+            string += '$';
+            const regex = new RegExp(string);
+            if (regex.test(this._input.innerText))
+                this._previousValue = this._input.innerText;
+            else {
+                const oldRange = window.getSelection()?.getRangeAt(0);
+                const caretPos = typeof oldRange === 'undefined' ? 0 : oldRange.startOffset - 1;
 
-        const handleInput = (e: Event) => {
-            if (e instanceof KeyboardEvent && e.type === 'keydown') {
-                // MOUSE CARET LEFT OR RIGHT WITH ARROW KEYS
-                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                this._input.innerText = this._previousValue;
+                const newRange = document.createRange();
+                if (typeof newRange !== 'undefined' && e.inputType !== 'deleteContentBackward') {
+                    newRange.setStart(<Node>this._input.firstChild, caretPos);
+                    newRange.setEnd(<Node>this._input.firstChild, caretPos);
                     const selection = window.getSelection();
-                    const range = selection?.getRangeAt(0);
-                    if (typeof range !== 'undefined' && selection !== null) {
-                        const direction = e.key === 'ArrowLeft' ? - 1 : 1;
-                        let position = range.startOffset + direction;
-                        const maxLength = range.endContainer.textContent?.length;
-                        if (position < 1) position = 0;
-                        if (typeof maxLength !== 'undefined') {
-                            if (position > maxLength)
-                            position = maxLength;
-                        } else {
-                            position -= direction;
-                        }
-                        if (e.ctrlKey && e.key === 'ArrowLeft')
-                            position = 0;
-                        else if (e.ctrlKey)
-                            position = typeof maxLength !== 'undefined' ? maxLength : range.startOffset;
-                        range.setStart(range.startContainer, position);
-                        range.collapse(true);
-                        selection.removeAllRanges();
-                        selection.addRange(range);
-                    }
-
-
+                    selection?.removeAllRanges();
+                    selection?.addRange(newRange);
                 }
             }
-        };
 
-        this._number = document.createElement('span');
-        this._number.classList.add('ici-number');
-        this._number.innerText = '0.0';
-        this._number.contentEditable = 'true';
-        this._number.style.outline = 'none';
+        })
 
-        this._number.addEventListener('input', cancelEvent);
-        this._number.addEventListener('cut', cancelEvent);
-        this._number.addEventListener('paste', cancelEvent);
-        this._number.addEventListener('compositionend', cancelEvent);
-        this._number.addEventListener('drop', cancelEvent);
-        this._number.addEventListener('keydown', cancelEvent);
-        this._number.addEventListener('keydown', handleInput);
-
-        this._name = document.createElement('span');
-        this._name.classList.add('ici-symbol');
-        this._name.innerText = 'USD';
-
-        this._nameSeparator = document.createElement('span');
-        this._nameSeparator.classList.add('ici-symbol');
-        this._nameSeparator.innerText = ' ';
-
-        this._parent.appendChild(this._symbol);
-        this._parent.appendChild(this._symbolSeparator);
-        this._parent.appendChild(this._number);
-        this._parent.appendChild(this._nameSeparator);
-        this._parent.appendChild(this._name);
-        this._container.appendChild(this._parent);
+        this._container.appendChild(this._input);
     }
 
 

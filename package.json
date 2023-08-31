@@ -49,6 +49,6 @@
     "webpack-dev-server": "^4.11.1"
   },
   "dependencies": {
-    "moneydew": "^0.0.1"
+    "moneydew": "0.1.0"
   }
 }

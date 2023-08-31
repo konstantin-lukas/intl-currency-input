@@ -1,5 +1,4 @@
-import {Money} from "moneydew/dist/money";
-import {MoneyFormatter} from "moneydew/dist/money_formatter";
+import {Money, MoneyFormatter} from "moneydew";
 
 export class IntlCurrencyInput {
     private _container: HTMLElement;

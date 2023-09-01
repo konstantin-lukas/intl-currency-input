@@ -1,4 +1,4 @@
-import {IntlCurrencyInput} from "./index";
+import {IntlCurrencyInput} from "../src";
 import {DisplayOrder} from "moneydew";
 
 const elem = document.querySelector('#parent');

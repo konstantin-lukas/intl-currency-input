@@ -1,8 +1,8 @@
 node_modules
 dist
 coverage
-public/index.d.ts
-public/index.js
-public/index.mjs
-public/index.js.map
-public/index.mjs.map
+index.d.ts
+index.js
+index.mjs
+index.js.map
+index.mjs.map

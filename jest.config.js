@@ -1,7 +1,7 @@
 const config = {
     verbose: true,
     preset: 'ts-jest',
-    testEnvironment: 'node'
+    testEnvironment: 'jsdom'
 };
 
 export default config;

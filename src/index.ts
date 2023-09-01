@@ -151,7 +151,8 @@ export class IntlCurrencyInput {
         });
 
         this._container.appendChild(this._input);
-    }
+    } // End of constructor
 
 
 }
+

@@ -35,7 +35,7 @@ export class IntlCurrencyInput {
 
         this._input = document.createElement('span');
         this._input.classList.add('ici-input');
-        this._input.innerText = this._formatter.format(this._money);
+        this._input.innerText = this._input.innerHTML = this._formatter.format(this._money);
         this._input.contentEditable = 'true';
         this._input.style.outline = 'none';
         this._input.setAttribute('spellcheck', 'false');
@@ -49,10 +49,10 @@ export class IntlCurrencyInput {
 
 
         this._input.addEventListener('input', (e: Event) => {
-            let inputRejected: boolean = false;
             if (!(e instanceof InputEvent) ||  e.type !== 'input') return;
             if (this._formattedValue === this._input.innerText) return;
 
+            let inputRejected: boolean = false;
             const prefix = this._formatter.prefix(this._money.isNegative);
             const suffix = this._formatter.suffix(this._money.isNegative);
             const prefixPattern: RegExp = new RegExp('^' + esc(prefix));

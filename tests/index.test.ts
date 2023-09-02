@@ -30,7 +30,7 @@ describe('CurrencyInput', () => {
         document.body.removeChild(container);
     });
 
-    test('CurrencyInput should format and update the value', async () => {
+    test('CurrencyInput should format and update the value',  () => {
         expect(inputElement.innerText).toBe('$0.00');
         const selection = window.getSelection() as Selection;
         const range = document.createRange();

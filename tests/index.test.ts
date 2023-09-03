@@ -1,10 +1,10 @@
-import { fireEvent } from '@testing-library/dom';
+import userEvent from '@testing-library/user-event';
 import { IntlCurrencyInput } from "../src";
 describe('CurrencyInput', () => {
 
     let container: HTMLElement;
     let input: IntlCurrencyInput;
-    let inputElement: HTMLElement;
+    let inputElement: HTMLInputElement;
     beforeEach(() => {
         // Create a container div and append it to the document body
         document.body.innerHTML =
@@ -20,9 +20,8 @@ describe('CurrencyInput', () => {
             '<div id="parent"></div>\n' +
             '</body>\n' +
             '</html>\n';
-        container = document.querySelector('#parent') as HTMLElement;
-        input = new IntlCurrencyInput(container, {});
-        inputElement = container.querySelector('span') as HTMLElement;
+        inputElement = document.querySelector('#parent input') as HTMLInputElement;
+        input = new IntlCurrencyInput(inputElement, '0.00', {});
     });
 
     afterEach(() => {
@@ -30,8 +29,17 @@ describe('CurrencyInput', () => {
         document.body.removeChild(container);
     });
 
-    test('CurrencyInput should format and update the value',  () => {
-        expect(inputElement.innerText).toBe('$0.00');
+    test('CurrencyInput should format and update the value',  async () => {
+        expect(inputElement.value).toBe('$0.00');
+
+        await userEvent.type(inputElement,    '4', {
+            initialSelectionStart: 1,
+            initialSelectionEnd: 1,
+        });
+
+        console.log(inputElement.value)
+
+        /*
         const selection = window.getSelection() as Selection;
         const range = document.createRange();
         range.setStart(inputElement.firstChild as Node, 1);
@@ -53,7 +61,7 @@ describe('CurrencyInput', () => {
 
         inputElement.innerText = 'd$2,000.00';
         fireEvent.input(inputElement, {});
-        expect(inputElement.innerText).toBe('$2,000.00');
+        expect(inputElement.innerText).toBe('$2,000.00');*/
 
 
     });

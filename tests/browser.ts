@@ -1,22 +1,22 @@
 import {IntlCurrencyInput} from "../src";
 import {DisplayOrder} from "moneydew";
 
-let elem = document.querySelector('#parent');
+let elem = document.querySelector('#parent input');
 let input: IntlCurrencyInput;
 if (elem) {
-    input = new IntlCurrencyInput(<HTMLElement>elem, {
+    input = new IntlCurrencyInput(elem as HTMLInputElement, '1234567.89', {
         currencyName: 'EUR',
         currencySymbol: '€',
         displayOrder: DisplayOrder.NAME_SIGN_NUMBER_SYMBOL,
         groupSeparator: ' ',
         decimalSeparator: ','
-    }, '1234567.89');
+    });
 
-    elem = document.querySelector('#parentTwo');
+    elem = document.querySelector('#parentTwo input');
     if (elem) {
-        input.remount(elem as HTMLElement);
-        console.log('VALUE: ' + input.getValue());
-        console.log('PARSED VALUE: ' + input.parse());
+        input.remount(elem as HTMLInputElement);
+        console.log('VALUE: ' + input.getFormattedValue());
+        console.log('PARSED VALUE: ' + input.getValue());
         input.format({
             currencySymbol: '$',
             currencyName: 'USD',

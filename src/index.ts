@@ -8,26 +8,14 @@ const esc = (string: string) => {
 }
 
 export class IntlCurrencyInput {
-    private _container: HTMLElement;
-    private _input: HTMLElement;
+    private _input: HTMLInputElement;
     private _money: Money;
     private _formattedValue: string;
     private _formatter: MoneyFormatter;
 
-    private getCaretPosition() {
-        const selection = window.getSelection();
-        const range = selection?.getRangeAt(0);
-        if (typeof range === 'undefined')
-            throw new Error('Can\'t get selection.');
-        const preCaretRange = range.cloneRange();
-        preCaretRange.selectNodeContents(this._input);
-        preCaretRange.setEnd(range.endContainer, range.endOffset);
-        return preCaretRange.toString().length;
-    } // private getCaretPosition()
-
     private handleInput(e: Event) {
         if (!(e instanceof InputEvent) ||  e.type !== 'input') return;
-        if (this._formattedValue === this._input.innerText) return;
+        if (this._formattedValue === this._input.value) return;
         // TODO: negative numbers / signed values +/-
 
         let inputRejected: boolean = false;
@@ -37,7 +25,7 @@ export class IntlCurrencyInput {
         const suffixPattern: RegExp = new RegExp(esc(suffix) + '$');
 
 
-        if (prefixPattern.test(this._input.innerText) && suffixPattern.test(this._input.innerText)) {
+        if (prefixPattern.test(this._input.value) && suffixPattern.test(this._input.value)) {
 
             let numberRegexPattern: string = '^';
             if (this._money.floatingPointPrecision > 0 && this._formatter.decimalSeparator !== '') {
@@ -51,7 +39,7 @@ export class IntlCurrencyInput {
             numberRegexPattern += '$';
             const valuePattern = new RegExp(numberRegexPattern);
 
-            const value = this._input.innerText.replace(prefixPattern,'').replace(suffixPattern,'');
+            const value = this._input.value.replace(prefixPattern,'').replace(suffixPattern,'');
             const rawValue = value.replace(RegExp(this._formatter.groupSeparator, 'g'), '');
 
             if (valuePattern.test(rawValue)) {
@@ -91,80 +79,65 @@ export class IntlCurrencyInput {
             inputRejected = true;
         }
 
-        const oldCaretPos = this.getCaretPosition();
-        const oldLength = this._input.innerText.length;
+        const oldCaretPos = this._input.selectionStart === null ? -1 : this._input.selectionStart;
+        const oldLength = this._input.value.length;
         const newLength = this._formattedValue.length;
 
-        this._input.innerText = this._formattedValue;
-        const newRange = document.createRange();
-        if (typeof newRange !== 'undefined') {
-            let newCaretPos = oldCaretPos;
-            if (inputRejected)
-                newCaretPos--;
-            else if (newLength - oldLength === 1)
-                newCaretPos++;
-            else if (newLength - oldLength === -1)
-                newCaretPos--;
-            if (newCaretPos < 0)
-                newCaretPos = 0;
-            else if (newCaretPos > newLength) {
-                newCaretPos = newLength
-            }
 
-            try {
-                newRange.setStart(<Node>this._input.firstChild, newCaretPos);
-                newRange.setEnd(<Node>this._input.firstChild, newCaretPos);
-            } catch (e) {
-                newRange.setStart(<Node>this._input.firstChild, 0);
-                newRange.setEnd(<Node>this._input.firstChild, 0);
-            }
+        this._input.value = this._formattedValue;
+        let newCaretPos = oldCaretPos;
+        if (inputRejected)
+            newCaretPos--;
+        else if (newLength - oldLength === 1)
+            newCaretPos++;
+        else if (newLength - oldLength === -1)
+            newCaretPos--;
+        if (newCaretPos < 0)
+            newCaretPos = 0;
+        else if (newCaretPos > newLength) {
+            newCaretPos = newLength
+        }
 
-
-            const selection = window.getSelection();
-            selection?.removeAllRanges();
-            selection?.addRange(newRange);
-
+        try {
+            this._input.setSelectionRange(newCaretPos, newCaretPos);
+        } catch (e) {
+            this._input.setSelectionRange(0, 0);
         }
         if (!inputRejected)
-            this._money.value = this.parse();
+            this._money.value = this.getValue();
+
+        console.log(this.getValue())
+        console.log(this.getFormattedValue())
     } // private handleInput(e: Event)
-    private createInput(): HTMLElement {
-        const input = document.createElement('span');
-        input.classList.add('ici-input');
-        input.innerText = input.innerHTML = this._formattedValue;
-        input.contentEditable = 'true';
-        input.style.outline = 'none';
-        input.setAttribute('spellcheck', 'false');
-        input.addEventListener('input', this.handleInput.bind(this));
-        return input;
-    }
 
     /**
-     * @param containerElement - An HTML element inside which to place the currency input
+     * @param inputElement - An HTML element inside which to place the currency input
      * @param initializer - A Moneydew MoneyFormatter initializer. Refer to Moneydew documentation. This controls the
      * formatting of the input. When omitted defaults to settings of default constructor for MoneyFormatter.
      * @param defaultValue - The default value to display. This also controls the amount of digits after the decimal separator.
      * When omitted defaults to 0.00 (value 0 with two values after separator).
      */
-    constructor(containerElement : HTMLElement, initializer?: FormatterInitializer, defaultValue?: string) {
+    constructor(inputElement : HTMLInputElement, defaultValue?: string, initializer?: FormatterInitializer) {
         this._money = new Money(typeof defaultValue !== 'undefined' ? defaultValue : '0.00');
         this._formatter = new MoneyFormatter(typeof initializer === 'undefined' ? {} : initializer);
         this._formattedValue = this._formatter.format(this._money);
-        this._container = containerElement;
-        this._input = this.createInput();
-        this._container.appendChild(this._input);
+        this._input = inputElement;
+        this._input.value = this._formattedValue;
+        this._input.addEventListener('input', this.handleInput.bind(this));
     } // constructor(containerElement : HTMLElement, initializer: FormatterInitializer, defaultValue?: string)
 
     /**
-     * @desc Detaches the input from the current container, destroying the input and creating a new one with the same
-     * value inside the specified container. Does nothing if old container is same as new one.
-     * @param containerElement The new element to mount to
+     * @desc Detaches the input from the current input, and attaches to new one.
+     * Does nothing if old container is same as new one.
+     * @param inputElement The new element to mount to
      */
-    public remount(containerElement: HTMLElement) {
-        this._input.remove();
-        this._input = this.createInput();
-        containerElement.appendChild(this._input);
-        this._container = containerElement;
+    public remount(inputElement: HTMLInputElement) {
+        if (this._input.isSameNode(inputElement))
+            return;
+        this._input.removeEventListener('input', this.handleInput.bind(this));
+        this._input = inputElement;
+        this._input.value = this._formattedValue;
+        this._input.addEventListener('input', this.handleInput.bind(this));
     } // public remount(containerElement: HTMLElement)
 
     /**
@@ -174,9 +147,8 @@ export class IntlCurrencyInput {
      * @param formatter The new formatter - refer to Moneydew documentation for details
      */
     public format(formatter: FormatterInitializer) {
-        const oldValue = this.parse();
         this._formatter = new MoneyFormatter(formatter);
-        this._input.innerText = this._formattedValue = this._formatter.format(this._money);
+        this._input.value = this._formattedValue = this._formatter.format(this._money);
     }
 
     /**
@@ -201,23 +173,16 @@ export class IntlCurrencyInput {
     }
 
     /**
-     * @returns the current value of the input that is displayed. Missing decimal places are filled with zeroes.
-     */
-    public getValue() {
-        return this._formatter.format(new Money(this.parse()));
-    }
-
-    /**
      * @returns a string representing the currently held value matching the following pattern: ^(0|[1-9]\d*)\\.\d{x,x}$
      * where x is the amount of current decimal places. Missing decimal places are filled with zeroes. This string
      * can be easily converted to a number but be careful as it may be larger than the largest integer.
      */
-    public parse() {
+    public getValue() {
         const prefix = this._formatter.prefix(this._money.isNegative);
         const suffix = this._formatter.suffix(this._money.isNegative);
         const prefixPattern: RegExp = new RegExp('^' + esc(prefix));
         const suffixPattern: RegExp = new RegExp(esc(suffix) + '$');
-        let rawValue = this._input.innerText.replace(prefixPattern,'')
+        let rawValue = this._input.value.replace(prefixPattern,'')
             .replace(suffixPattern,'')
             .replace(RegExp(this._formatter.groupSeparator, 'g'), '')
             .replace(this._formatter.decimalSeparator, '.');
@@ -235,6 +200,13 @@ export class IntlCurrencyInput {
             }
         }
         return rawValue;
+    }
+
+    /**
+     * @returns the current value of the input that is displayed. Missing decimal places are filled with zeroes.
+     */
+    public getFormattedValue() {
+        return this._formatter.format(new Money(this.getValue()));
     }
 
     /**

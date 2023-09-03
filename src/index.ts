@@ -12,9 +12,9 @@ export class IntlCurrencyInput {
     private _money: Money;
     private _formattedValue: string;
     private _formatter: MoneyFormatter;
+    private _eventListener: () => void;
 
-    private handleInput(e: Event) {
-        if (!(e instanceof InputEvent) ||  e.type !== 'input') return;
+    private handleInput() {
         if (this._formattedValue === this._input.value) return;
         // TODO: negative numbers / signed values +/-
 
@@ -79,52 +79,59 @@ export class IntlCurrencyInput {
             inputRejected = true;
         }
 
-        const oldCaretPos = this._input.selectionStart === null ? -1 : this._input.selectionStart;
+        /* istanbul ignore next */
+        let caretPos = this._input.selectionStart === null ? 0 : this._input.selectionStart;
         const oldLength = this._input.value.length;
         const newLength = this._formattedValue.length;
 
-
         this._input.value = this._formattedValue;
-        let newCaretPos = oldCaretPos;
-        if (inputRejected)
-            newCaretPos--;
-        else if (newLength - oldLength === 1)
-            newCaretPos++;
+
+        if (newLength - oldLength === 1)
+            caretPos++;
         else if (newLength - oldLength === -1)
-            newCaretPos--;
-        if (newCaretPos < 0)
-            newCaretPos = 0;
-        else if (newCaretPos > newLength) {
-            newCaretPos = newLength
-        }
+            caretPos--;
 
         try {
-            this._input.setSelectionRange(newCaretPos, newCaretPos);
+            this._input.setSelectionRange(caretPos, caretPos);
         } catch (e) {
+            /* istanbul ignore next */
             this._input.setSelectionRange(0, 0);
         }
+
         if (!inputRejected)
             this._money.value = this.getValue();
-
-        console.log(this.getValue())
-        console.log(this.getFormattedValue())
     } // private handleInput(e: Event)
 
     /**
      * @param inputElement - An HTML element inside which to place the currency input
      * @param initializer - A Moneydew MoneyFormatter initializer. Refer to Moneydew documentation. This controls the
      * formatting of the input. When omitted defaults to settings of default constructor for MoneyFormatter.
-     * @param defaultValue - The default value to display. This also controls the amount of digits after the decimal separator.
+     * @param initialValue - The default value to display. This also controls the amount of digits after the decimal separator.
      * When omitted defaults to 0.00 (value 0 with two values after separator).
      */
-    constructor(inputElement : HTMLInputElement, defaultValue?: string, initializer?: FormatterInitializer) {
-        this._money = new Money(typeof defaultValue !== 'undefined' ? defaultValue : '0.00');
+    constructor(inputElement : HTMLInputElement, initialValue?: string, initializer?: FormatterInitializer) {
+        this._money = new Money(typeof initialValue !== 'undefined' ? initialValue : '0.00');
         this._formatter = new MoneyFormatter(typeof initializer === 'undefined' ? {} : initializer);
         this._formattedValue = this._formatter.format(this._money);
+        inputElement.value = this._formattedValue;
         this._input = inputElement;
-        this._input.value = this._formattedValue;
-        this._input.addEventListener('input', this.handleInput.bind(this));
-    } // constructor(containerElement : HTMLElement, initializer: FormatterInitializer, defaultValue?: string)
+        this._eventListener = this.handleInput.bind(this);
+        this._input.addEventListener('input', this._eventListener);
+    } // constructor(containerElement : HTMLElement, defaultValue?: string, initializer?: FormatterInitializer)
+
+    /**
+     * @desc Unmounts the currency input. Trying to use member functions other than {@link remount} after unmounting will
+     * likely result in an error und {@link remount} is called or the variable has been overwritten by a new
+     * instance of IntlCurrencyInput. Note that you don't have to call this function before {@link remount}. This function
+     * is useful if you are done using the input. It is recommended to unmount before the currency input gets destroyed
+     * by the garbage collector. Otherwise, you end up with a rogue event listener on your input element.
+     */
+    unmount() {
+        this._input.removeEventListener('input', this._eventListener);
+        this._input = null as unknown as HTMLInputElement;
+        this._eventListener = null as unknown as () => void;
+    }
+
 
     /**
      * @desc Detaches the input from the current input, and attaches to new one.
@@ -134,10 +141,11 @@ export class IntlCurrencyInput {
     public remount(inputElement: HTMLInputElement) {
         if (this._input.isSameNode(inputElement))
             return;
-        this._input.removeEventListener('input', this.handleInput.bind(this));
+        this._input.removeEventListener('input', this._eventListener);
         this._input = inputElement;
         this._input.value = this._formattedValue;
-        this._input.addEventListener('input', this.handleInput.bind(this));
+        this._eventListener = this.handleInput.bind(this);
+        this._input.addEventListener('input', this._eventListener);
     } // public remount(containerElement: HTMLElement)
 
     /**
@@ -147,6 +155,8 @@ export class IntlCurrencyInput {
      * @param formatter The new formatter - refer to Moneydew documentation for details
      */
     public format(formatter: FormatterInitializer) {
+        // TODO: Make sure no critical symbols like the decimal separator are empty strings
+        // TODO: Make sure no critical symbols are used twice i.e. decimal sep = group sep
         this._formatter = new MoneyFormatter(formatter);
         this._input.value = this._formattedValue = this._formatter.format(this._money);
     }
@@ -168,8 +178,9 @@ export class IntlCurrencyInput {
     /**
      * @desc Sets the current value held by the input. This implicitly determines the amount of decimal places displayed.
      */
-    public setValue(value: Money) {
-
+    public setValue(value: string) {
+        this._money = new Money(value);
+        this._input.value = this._formattedValue = this._formatter.format(this._money);
     }
 
     /**
@@ -193,7 +204,7 @@ export class IntlCurrencyInput {
             for (let i = 0; i < missingZeroes; i++) {
                 rawValue += '0';
             }
-        } else if (decimalPointIndex === -1) {
+        } else if (decimalPointIndex === -1 && this._money.floatingPointPrecision > 0) {
             rawValue += '.'
             for (let i = 0; i < this._money.floatingPointPrecision; i++) {
                 rawValue += '0';
@@ -226,8 +237,8 @@ export class IntlCurrencyInput {
     /**
      * @returns whether the input is disabled
      */
-    public isDisabled(): boolean {
-        return true;
+    public isDisabled() {
+
     }
 
     /**

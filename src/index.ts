@@ -1,4 +1,4 @@
-import {FormatterInitializer, Money, MoneyFormatter} from "moneydew";
+import {FormatterInitializer, Money, MoneyCalculator, MoneyFormatter} from "moneydew";
 
 /**
  * @desc Escapes a string for regex construction.
@@ -13,9 +13,17 @@ export class IntlCurrencyInput {
     private _formattedValue: string;
     private _formatter: MoneyFormatter;
     private _eventListener: () => void;
+    private _disabled: boolean = false;
+    private _validCallback: null | (() => void) = null;
+    private _invalidCallback: null | (() => void) = null;
+    private _allowNegativeValues: boolean = true;
 
     private handleInput() {
         if (this._formattedValue === this._input.value) return;
+        if (this._disabled) {
+            this._input.value = this._formattedValue;
+            return;
+        }
         // TODO: negative numbers / signed values +/-
 
         let inputRejected: boolean = false;
@@ -98,8 +106,14 @@ export class IntlCurrencyInput {
             this._input.setSelectionRange(0, 0);
         }
 
-        if (!inputRejected)
+        if (inputRejected) {
+            if (this._invalidCallback)
+                this._invalidCallback();
+        } else {
             this._money.value = this.getValue();
+            if (this._validCallback)
+                this._validCallback();
+        }
     } // private handleInput(e: Event)
 
     /**
@@ -120,20 +134,6 @@ export class IntlCurrencyInput {
     } // constructor(containerElement : HTMLElement, defaultValue?: string, initializer?: FormatterInitializer)
 
     /**
-     * @desc Unmounts the currency input. Trying to use member functions other than {@link remount} after unmounting will
-     * likely result in an error und {@link remount} is called or the variable has been overwritten by a new
-     * instance of IntlCurrencyInput. Note that you don't have to call this function before {@link remount}. This function
-     * is useful if you are done using the input. It is recommended to unmount before the currency input gets destroyed
-     * by the garbage collector. Otherwise, you end up with a rogue event listener on your input element.
-     */
-    unmount() {
-        this._input.removeEventListener('input', this._eventListener);
-        this._input = null as unknown as HTMLInputElement;
-        this._eventListener = null as unknown as () => void;
-    }
-
-
-    /**
      * @desc Detaches the input from the current input, and attaches to new one.
      * Does nothing if old container is same as new one.
      * @param inputElement The new element to mount to
@@ -147,6 +147,19 @@ export class IntlCurrencyInput {
         this._eventListener = this.handleInput.bind(this);
         this._input.addEventListener('input', this._eventListener);
     } // public remount(containerElement: HTMLElement)
+
+    /**
+     * @desc Unmounts the currency input. Trying to use member functions other than {@link remount} after unmounting will
+     * likely result in an error und {@link remount} is called or the variable has been overwritten by a new
+     * instance of IntlCurrencyInput. Note that you don't have to call this function before {@link remount}. This function
+     * is useful if you are done using the input. It is recommended to unmount before the currency input gets destroyed
+     * by the garbage collector. Otherwise, you end up with a rogue event listener on your input element.
+     */
+    unmount() {
+        this._input.removeEventListener('input', this._eventListener);
+        this._input = null as unknown as HTMLInputElement;
+        this._eventListener = null as unknown as () => void;
+    } // unmount()
 
     /**
      * @desc Replaces the Moneydew formatter currently in use with a new one and automatically adjusts displayed value.
@@ -164,15 +177,25 @@ export class IntlCurrencyInput {
     /**
      * @desc Add a value to the current input
      */
-    public add(value: Money) {
-
+    public add(value: Money | string) {
+        if (typeof value === 'string') {
+            MoneyCalculator.add(this._money, new Money(value));
+        } else {
+            MoneyCalculator.add(this._money, value);
+        }
+        this._input.value = this._formattedValue = this._formatter.format(this._money);
     }
 
     /**
      * @desc Subtract a value from the current input
      */
-    public subtract(value: Money) {
-
+    public subtract(value: Money | string) {
+        if (typeof value === 'string') {
+            MoneyCalculator.subtract(this._money, new Money(value));
+        } else {
+            MoneyCalculator.subtract(this._money, value);
+        }
+        this._input.value = this._formattedValue = this._formatter.format(this._money);
     }
 
     /**
@@ -210,6 +233,8 @@ export class IntlCurrencyInput {
                 rawValue += '0';
             }
         }
+        if (this._money.isNegative)
+            rawValue = '-' + rawValue;
         return rawValue;
     }
 
@@ -217,28 +242,30 @@ export class IntlCurrencyInput {
      * @returns the current value of the input that is displayed. Missing decimal places are filled with zeroes.
      */
     public getFormattedValue() {
-        return this._formatter.format(new Money(this.getValue()));
+        return this._formatter.format(this._money);
     }
 
     /**
      * @desc Prevents further user input and adds the .ici-disabled class to the input for user-defined styling.
      */
     public disable() {
-
+        this._disabled = true;
+        this._input.classList.add('ici-disabled');
     }
 
     /**
      * @desc Allows user input again after {@link disable} was called and removes .ici-disabled class.
      */
     public enable() {
-
+        this._disabled = false;
+        this._input.classList.remove('ici-disabled');
     }
 
     /**
      * @returns whether the input is disabled
      */
     public isDisabled() {
-
+        return this._disabled;
     }
 
     /**
@@ -265,7 +292,7 @@ export class IntlCurrencyInput {
      * @param callback A parameterless function returning void
      */
     public validCallback(callback: (() => void)) {
-
+        this._validCallback = callback;
     }
 
     /**
@@ -274,7 +301,7 @@ export class IntlCurrencyInput {
      * @param callback A parameterless function returning void
      */
     public invalidCallback(callback: (() => void)) {
-
+        this._invalidCallback = callback;
     }
 
     /**

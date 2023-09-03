@@ -1,5 +1,6 @@
 import userEvent from '@testing-library/user-event';
 import { IntlCurrencyInput } from "../src";
+import { Money } from "moneydew";
 
 describe('CurrencyInput', () => {
 
@@ -381,6 +382,34 @@ describe('CurrencyInput', () => {
 
     });
 
+    it('should not accept any input when disabled and add a disabled class for styling', async () => {
+        expect(input.isDisabled()).toBeFalsy();
+        input.disable();
+        expect(input.isDisabled()).toBeTruthy();
+        expect(()=>{input.disable()}).not.toThrow();
+        await userEvent.type(inputElement,'1', {
+            initialSelectionStart: 1,
+            initialSelectionEnd: 1,
+        });
+        expect(input.getFormattedValue()).toBe('$0.00');
+        expect(input.getValue()).toBe('0.00');
+        expect(inputElement.value).toBe('$0.00');
+        expect(inputElement.classList).toContain('ici-disabled');
+
+        input.enable();
+        expect(()=>{input.enable()}).not.toThrow();
+        expect(input.isDisabled()).toBeFalsy();
+        await userEvent.type(inputElement,'1', {
+            initialSelectionStart: 1,
+            initialSelectionEnd: 1,
+        });
+        expect(input.getFormattedValue()).toBe('$10.00');
+        expect(input.getValue()).toBe('10.00');
+        expect(inputElement.value).toBe('$10.00');
+        expect(inputElement.classList).not.toContain('ici-disabled');
+
+    });
+
     describe('remount', () => {
         it('should detach the input from the old element and attach it to a new one', async () => {
             const otherInputElement = document.querySelector('#inputElementTwo') as HTMLInputElement;
@@ -410,6 +439,88 @@ describe('CurrencyInput', () => {
                 initialSelectionEnd: 1
             });
             expect(otherInputElement.value).toBe('$10.00');
+
+        });
+    });
+
+    describe('Arithmetic', () => {
+        it('should add to the current value and refresh the input', () => {
+            expect(input.getValue()).toBe('0.00');
+            input.add('19.00');
+            expect(input.getValue()).toBe('19.00');
+            expect(input.getFormattedValue()).toBe('$19.00');
+            expect(inputElement.value).toBe('$19.00');
+
+            input.add(new Money('-2.00'));
+            expect(input.getValue()).toBe('17.00');
+            expect(input.getFormattedValue()).toBe('$17.00');
+            expect(inputElement.value).toBe('$17.00');
+
+            input.add('0.01');
+            expect(input.getValue()).toBe('17.01');
+            expect(input.getFormattedValue()).toBe('$17.01');
+            expect(inputElement.value).toBe('$17.01');
+
+            input.add('-0.02');
+            expect(input.getValue()).toBe('16.99');
+            expect(input.getFormattedValue()).toBe('$16.99');
+            expect(inputElement.value).toBe('$16.99');
+        });
+
+        it('should subtract from the current value and refresh the input', () => {
+            expect(input.getValue()).toBe('0.00');
+            input.subtract('19.00');
+            expect(input.getValue()).toBe('-19.00');
+            expect(input.getFormattedValue()).toBe('-$19.00');
+            expect(inputElement.value).toBe('-$19.00');
+
+            input.subtract(new Money('-2.00'));
+            expect(input.getValue()).toBe('-17.00');
+            expect(input.getFormattedValue()).toBe('-$17.00');
+            expect(inputElement.value).toBe('-$17.00');
+
+            input.subtract('0.01');
+            expect(input.getValue()).toBe('-17.01');
+            expect(input.getFormattedValue()).toBe('-$17.01');
+            expect(inputElement.value).toBe('-$17.01');
+
+            input.subtract('-0.02');
+            expect(input.getValue()).toBe('-16.99');
+            expect(input.getFormattedValue()).toBe('-$16.99');
+            expect(inputElement.value).toBe('-$16.99');
+        });
+    });
+
+    describe('Callbacks', () => {
+        it('should execute user-specified callback functions', async () => {
+            let counter = 0;
+
+            input.validCallback(() => {
+                counter++;
+            });
+
+            await userEvent.type(inputElement, '1', {
+                initialSelectionStart: 1,
+                initialSelectionEnd: 1
+            });
+
+            expect(counter).toBe(1);
+
+            input.invalidCallback(() => {
+                counter += 2;
+            });
+
+            await userEvent.type(inputElement, 'a', {
+                initialSelectionStart: 1,
+                initialSelectionEnd: 1
+            });
+            expect(counter).toBe(3);
+
+            await userEvent.type(inputElement, '9', {
+                initialSelectionStart: 1,
+                initialSelectionEnd: 1
+            });
+            expect(counter).toBe(4);
 
         });
     });

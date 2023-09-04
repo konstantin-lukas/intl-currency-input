@@ -25,5 +25,11 @@ if (elem) {
             negativeSign: '-',
             positiveSign: '+'
         });
+        document.getElementById('clicky')?.addEventListener('click', () => {
+            input.enableStrictMode();
+        });
+        document.getElementById('yeah')?.addEventListener('click', () => {
+            input.disableStrictMode();
+        });
     }
 }

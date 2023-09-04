@@ -10,20 +10,16 @@ const esc = (string: string) => {
 export class IntlCurrencyInput {
     private _input: HTMLInputElement;
     private _money: Money;
-    private _formattedValue: string;
-    private _formatter: MoneyFormatter;
-    private _eventListener: () => void;
-    private _disabled: boolean = false;
+    private _inputValue!: string;
+    private _formatter!: MoneyFormatter;
+    private _eventListener: (e: InputEvent) => void;
     private _validCallback: null | (() => void) = null;
     private _invalidCallback: null | (() => void) = null;
+    private _strictMode: boolean = false;
     private _allowNegativeValues: boolean = true;
 
-    private handleInput() {
-        if (this._formattedValue === this._input.value) return;
-        if (this._disabled) {
-            this._input.value = this._formattedValue;
-            return;
-        }
+    private handleInput(e: InputEvent) {
+        if (this._inputValue === this._input.value) return;
         // TODO: negative numbers / signed values +/-
 
         let inputRejected: boolean = false;
@@ -37,10 +33,28 @@ export class IntlCurrencyInput {
 
             let numberRegexPattern: string = '^';
             if (this._money.floatingPointPrecision > 0 && this._formatter.decimalSeparator !== '') {
-                numberRegexPattern += '(0|';
-                numberRegexPattern += '0'+ esc(this._formatter.decimalSeparator) + '\\d{0,' + this._money.floatingPointPrecision + '}|';
-                numberRegexPattern += '[1-9]\\d*|';
-                numberRegexPattern += '[1-9]\\d*' + esc(this._formatter.decimalSeparator) + '\\d{0,' + this._money.floatingPointPrecision + '})';
+                if (this._strictMode) {
+                    const start = this._input.selectionStart === null ? 0 : this._input.selectionStart;
+                    const end = this._input.selectionEnd === null ? 0 : this._input.selectionEnd;
+                    const decimalSepPos = this._input.value.indexOf(this._formatter.decimalSeparator);
+                    if (start === end && start > decimalSepPos && e.inputType === 'insertText') {
+                        let stringArray = this._input.value.split('');
+                        stringArray = stringArray.slice(0, start).concat(stringArray.slice(start + 1));
+
+                        const suffixPos = this._input.value.search(suffixPattern);
+                        const caretPos = start > suffixPos - 1 ? suffixPos - 1 : start;
+
+                        this._input.value = stringArray.join('');
+                        this._input.setSelectionRange(caretPos, caretPos);
+                    }
+                    numberRegexPattern += '(0|[1-9]\\d*)' + esc(this._formatter.decimalSeparator);
+                    numberRegexPattern += '\\d{' + this._money.floatingPointPrecision + ',' + this._money.floatingPointPrecision + '}';
+                } else {
+                    numberRegexPattern += '(0|';
+                    numberRegexPattern += '0' + esc(this._formatter.decimalSeparator) + '\\d{0,' + this._money.floatingPointPrecision + '}|';
+                    numberRegexPattern += '[1-9]\\d*|';
+                    numberRegexPattern += '[1-9]\\d*' + esc(this._formatter.decimalSeparator) + '\\d{0,' + this._money.floatingPointPrecision + '})';
+                }
             } else {
                 numberRegexPattern += '[1-9]\\d*';
             }
@@ -79,7 +93,7 @@ export class IntlCurrencyInput {
                     result = rawValue;
                 }
                 result = prefix + result + suffix;
-                this._formattedValue = result;
+                this._inputValue = result;
             } else {
                 inputRejected = true;
             }
@@ -89,15 +103,21 @@ export class IntlCurrencyInput {
 
         /* istanbul ignore next */
         let caretPos = this._input.selectionStart === null ? 0 : this._input.selectionStart;
+        const oldCaretPos = caretPos;
         const oldLength = this._input.value.length;
-        const newLength = this._formattedValue.length;
+        const newLength = this._inputValue.length;
 
-        this._input.value = this._formattedValue;
+        this._input.value = this._inputValue;
 
-        if (newLength - oldLength === 1)
-            caretPos++;
-        else if (newLength - oldLength === -1)
+        if (newLength < oldLength)
+            caretPos -= (oldLength - newLength);
+        else if (newLength > oldLength)
+            caretPos += (newLength - oldLength);
+
+        if (inputRejected && e.inputType === 'deleteContentForward')
             caretPos--;
+        else if (!inputRejected && e.inputType === 'deleteContentForward' && oldCaretPos >= prefix.length && caretPos < prefix.length)
+            caretPos += this._formatter.groupSeparator.length;
 
         try {
             this._input.setSelectionRange(caretPos, caretPos);
@@ -125,12 +145,10 @@ export class IntlCurrencyInput {
      */
     constructor(inputElement : HTMLInputElement, initialValue?: string, initializer?: FormatterInitializer) {
         this._money = new Money(typeof initialValue !== 'undefined' ? initialValue : '0.00');
-        this._formatter = new MoneyFormatter(typeof initializer === 'undefined' ? {} : initializer);
-        this._formattedValue = this._formatter.format(this._money);
-        inputElement.value = this._formattedValue;
         this._input = inputElement;
+        this.format(typeof initializer === 'undefined' ? {} : initializer);
         this._eventListener = this.handleInput.bind(this);
-        this._input.addEventListener('input', this._eventListener);
+        this._input.addEventListener('input', this._eventListener as EventListener);
     } // constructor(containerElement : HTMLElement, defaultValue?: string, initializer?: FormatterInitializer)
 
     /**
@@ -141,37 +159,84 @@ export class IntlCurrencyInput {
     public remount(inputElement: HTMLInputElement) {
         if (this._input.isSameNode(inputElement))
             return;
-        this._input.removeEventListener('input', this._eventListener);
+        this._input.removeEventListener('input', this._eventListener as EventListener);
         this._input = inputElement;
-        this._input.value = this._formattedValue;
+        this._input.value = this._inputValue;
         this._eventListener = this.handleInput.bind(this);
-        this._input.addEventListener('input', this._eventListener);
+        this._input.addEventListener('input', this._eventListener as EventListener);
     } // public remount(containerElement: HTMLElement)
 
     /**
      * @desc Unmounts the currency input. Trying to use member functions other than {@link remount} after unmounting will
-     * likely result in an error und {@link remount} is called or the variable has been overwritten by a new
+     * result in undefined behaviour until {@link remount} is called or the variable has been overwritten by a new
      * instance of IntlCurrencyInput. Note that you don't have to call this function before {@link remount}. This function
-     * is useful if you are done using the input. It is recommended to unmount before the currency input gets destroyed
-     * by the garbage collector. Otherwise, you end up with a rogue event listener on your input element.
+     * is useful if you want to stop input restrictions on the input element. It is recommended to unmount before the
+     * currency input gets destroyed by the garbage collector. Otherwise, you end up with a rogue event listener on your
+     * input element.
      */
     unmount() {
-        this._input.removeEventListener('input', this._eventListener);
-        this._input = null as unknown as HTMLInputElement;
-        this._eventListener = null as unknown as () => void;
+        this._input.removeEventListener('input', this._eventListener as EventListener);
     } // unmount()
 
     /**
      * @desc Replaces the Moneydew formatter currently in use with a new one and automatically adjusts displayed value.
      * It is not recommended to change this formatter afterward as the currency will not automatically register those
      * changes.
-     * @param formatter The new formatter - refer to Moneydew documentation for details
+     * @param f The new formatter - refer to Moneydew documentation for details
      */
-    public format(formatter: FormatterInitializer) {
-        // TODO: Make sure no critical symbols like the decimal separator are empty strings
-        // TODO: Make sure no critical symbols are used twice i.e. decimal sep = group sep
-        this._formatter = new MoneyFormatter(formatter);
-        this._input.value = this._formattedValue = this._formatter.format(this._money);
+    public format(f: FormatterInitializer) {
+
+        const  haveCommonCharacters = (str1: string, str2: string): boolean => {
+            if (str1 === str2) return true;
+            const charSet1 = new Set(str1);
+            const charSet2 = new Set(str2);
+            for (const char of charSet1) {
+                if (charSet2.has(char)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if (typeof f.digitCharacters !== 'undefined') {
+            f.digitCharacters = undefined;
+            console.warn('The digitCharacters option is not supported in this version. Value will be ignored');
+        }
+
+        if (typeof f.myriadMode !== 'undefined') {
+            f.myriadMode = undefined;
+            console.warn('The myriadMode option is not supported in this version. Value will be ignored');
+        }
+
+        if (typeof f.myriadCharacters !== 'undefined') {
+            f.myriadCharacters = undefined;
+            console.warn('The digitCharacters option is not supported in this version. Value will be ignored');
+        }
+
+        if (typeof f.decimalSeparator !== 'undefined' && f.decimalSeparator === '')
+            throw new Error('Decimal separator cannot be empty.');
+
+        if ((typeof f.groupSeparator !== 'undefined' &&
+                typeof f.decimalSeparator !== 'undefined' &&
+                haveCommonCharacters(f.groupSeparator, f.decimalSeparator)) ||
+            (typeof f.groupSeparator !== 'undefined' &&
+                typeof f.decimalSeparator === 'undefined' &&
+                haveCommonCharacters(f.groupSeparator, '.')) ||
+            (typeof f.groupSeparator === 'undefined' &&
+                typeof f.decimalSeparator !== 'undefined' &&
+                haveCommonCharacters(',', f.decimalSeparator)))
+            throw new Error('Decimal and group separated may not have any characters in common.');
+
+        if ((typeof f.positiveSign !== 'undefined' &&
+                typeof f.negativeSign !== 'undefined' &&
+                f.positiveSign === f.negativeSign) ||
+            (typeof f.positiveSign !== 'undefined' &&
+                typeof f.negativeSign === 'undefined' &&
+                f.positiveSign === '-') )
+            throw new Error('The positive and negative sign may not be the same.');
+
+        this._formatter = new MoneyFormatter(f);
+        this._input.value = this._inputValue = this._formatter.format(this._money);
     }
 
     /**
@@ -183,7 +248,7 @@ export class IntlCurrencyInput {
         } else {
             MoneyCalculator.add(this._money, value);
         }
-        this._input.value = this._formattedValue = this._formatter.format(this._money);
+        this._input.value = this._inputValue = this._formatter.format(this._money);
     }
 
     /**
@@ -195,7 +260,7 @@ export class IntlCurrencyInput {
         } else {
             MoneyCalculator.subtract(this._money, value);
         }
-        this._input.value = this._formattedValue = this._formatter.format(this._money);
+        this._input.value = this._inputValue = this._formatter.format(this._money);
     }
 
     /**
@@ -203,7 +268,7 @@ export class IntlCurrencyInput {
      */
     public setValue(value: string) {
         this._money = new Money(value);
-        this._input.value = this._formattedValue = this._formatter.format(this._money);
+        this._input.value = this._inputValue = this._formatter.format(this._money);
     }
 
     /**
@@ -246,44 +311,45 @@ export class IntlCurrencyInput {
     }
 
     /**
-     * @desc Prevents further user input and adds the .ici-disabled class to the input for user-defined styling.
+     * @desc Disables the input element.
      */
     public disable() {
-        this._disabled = true;
-        this._input.classList.add('ici-disabled');
+        this._input.disabled = true;
     }
 
     /**
-     * @desc Allows user input again after {@link disable} was called and removes .ici-disabled class.
+     * @desc Enables the input element.
      */
     public enable() {
-        this._disabled = false;
-        this._input.classList.remove('ici-disabled');
+        this._input.disabled = false;
     }
 
     /**
      * @returns whether the input is disabled
      */
     public isDisabled() {
-        return this._disabled;
+        return this._input.disabled;
     }
 
     /**
      * @desc Enables strict mode. In strict mode the decimal separator cannot be removed and typing with the caret touching
      * the digits right of the decimal separator will overwrite the digit to the right of the caret. This implicitly means
-     * that the value held by the currency input is always valid.
+     * that the value held by the currency input is always valid. Keep in my that {@link getFormattedValue} and
+     * {@link getValue} always return a valid value. Strict mode only controls the displayed value and user interaction.
      */
     public enableStrictMode() {
-
+        this._strictMode = true;
+        this._input.value = this._inputValue = this.getFormattedValue();
     }
 
     /**
      * @desc Disables strict mode after {@link enableStrictMode} was called. When strict mode is disabled, the decimal
      * separator can be deleted and so can the numbers to the right of the decimal separator. This allows for more flexibility
-     * when the user is typing but may require extra validation.
+     * when the user is typing but may require extra validation. Keep in my that {@link getFormattedValue} and
+     * {@link getValue} always return a valid value. Strict mode only controls the displayed value and user interaction.
      */
     public disableStrictMode() {
-
+        this._strictMode = false;
     }
 
     /**

@@ -1,6 +1,6 @@
 import userEvent from '@testing-library/user-event';
-import { IntlCurrencyInput } from "../src";
-import { Money } from "moneydew";
+import {IntlCurrencyInput} from "../src";
+import {DisplayOrder, Money, MyriadMode} from "moneydew";
 
 describe('CurrencyInput', () => {
 
@@ -299,7 +299,39 @@ describe('CurrencyInput', () => {
             initialSelectionEnd: 4,
         });
 
-        expect(inputElement.value).toBe('$900');
+
+        input.add('1800.00');
+        expect(inputElement.value).toBe('$2,700.00');
+        await userEvent.type(inputElement, '{delete}', {
+            initialSelectionStart: 1,
+            initialSelectionEnd: 1
+        });
+        expect(inputElement.value).toBe('$700.00');
+        expect(inputElement.selectionStart).toBe(1);
+        expect(inputElement.selectionEnd).toBe(1);
+
+
+        await userEvent.type(inputElement,'{delete}', {
+            initialSelectionStart: 0,
+            initialSelectionEnd: 0
+        });
+
+        expect(inputElement.value).toBe('$700.00');
+        expect(inputElement.selectionStart).toBe(0);
+        expect(inputElement.selectionEnd).toBe(0);
+
+        input.format({
+            currencySymbol: ''
+        });
+        input.setValue('750.00');
+        expect(inputElement.value).toBe('750.00');
+
+        await userEvent.type(inputElement,'{delete}', {
+            initialSelectionStart: 0,
+            initialSelectionEnd: 0
+        });
+
+        expect(inputElement.value).toBe('50.00');
         expect(inputElement.selectionStart).toBe(0);
         expect(inputElement.selectionEnd).toBe(0);
 
@@ -382,10 +414,12 @@ describe('CurrencyInput', () => {
 
     });
 
-    it('should not accept any input when disabled and add a disabled class for styling', async () => {
+    it('should not accept any input when disabled', async () => {
         expect(input.isDisabled()).toBeFalsy();
+        expect(inputElement.disabled).toBeFalsy();
         input.disable();
         expect(input.isDisabled()).toBeTruthy();
+        expect(inputElement.disabled).toBeTruthy();
         expect(()=>{input.disable()}).not.toThrow();
         await userEvent.type(inputElement,'1', {
             initialSelectionStart: 1,
@@ -394,11 +428,11 @@ describe('CurrencyInput', () => {
         expect(input.getFormattedValue()).toBe('$0.00');
         expect(input.getValue()).toBe('0.00');
         expect(inputElement.value).toBe('$0.00');
-        expect(inputElement.classList).toContain('ici-disabled');
 
         input.enable();
         expect(()=>{input.enable()}).not.toThrow();
         expect(input.isDisabled()).toBeFalsy();
+        expect(inputElement.disabled).toBeFalsy();
         await userEvent.type(inputElement,'1', {
             initialSelectionStart: 1,
             initialSelectionEnd: 1,
@@ -406,7 +440,6 @@ describe('CurrencyInput', () => {
         expect(input.getFormattedValue()).toBe('$10.00');
         expect(input.getValue()).toBe('10.00');
         expect(inputElement.value).toBe('$10.00');
-        expect(inputElement.classList).not.toContain('ici-disabled');
 
     });
 
@@ -522,6 +555,90 @@ describe('CurrencyInput', () => {
             });
             expect(counter).toBe(4);
 
+        });
+    });
+
+    describe('format', () => {
+        it('ensures that decimal and group separator are different', () => {
+            expect(() => input.format({
+                groupSeparator: '',
+                decimalSeparator: ''
+            })).toThrow();
+            expect(() => input.format({
+                groupSeparator: '',
+                decimalSeparator: '.'
+            })).not.toThrow();
+            expect(() => input.format({
+                decimalSeparator: ','
+            })).toThrow();
+            expect(() => input.format({
+                groupSeparator: '.'
+            })).toThrow();
+            expect(() => input.format({
+                groupSeparator: '.',
+                decimalSeparator: ','
+            })).not.toThrow();
+            expect(() => input.format({
+                groupSeparator: '.',
+                decimalSeparator: '.'
+            })).toThrow();
+            expect(() => input.format({
+                groupSeparator: 'ABC',
+                decimalSeparator: 'GDA'
+            })).toThrow();
+        });
+        it('ensures that the decimal separator is not empty', () => {
+            expect(() => input.format({
+                decimalSeparator: '.'
+            })).not.toThrow();
+            expect(() => input.format({
+                decimalSeparator: ''
+            })).toThrow();
+        });
+        it('ensures that the positve and negative sign are different', () => {
+            expect(() => input.format({
+                positiveSign: '-'
+            })).toThrow();
+            expect(() => input.format({
+                positiveSign: '-',
+                negativeSign: '+'
+            })).not.toThrow();
+            expect(() => input.format({
+                positiveSign: '-',
+                negativeSign: '-'
+            })).toThrow();
+        });
+        it('ignores formatting options that are unused by current library version', () => {
+            const warn = jest.spyOn(console, 'warn').mockImplementation();
+            input.format({
+                digitCharacters: [],
+                myriadMode: MyriadMode.CHINESE,
+                myriadCharacters: []
+            });
+            expect(warn).toHaveBeenCalledTimes(3);
+        });
+        it('should format the value according to options', () => {
+            input.setValue('76279375987579876.734');
+            input.format({
+                groupSeparator: '  ',
+                groupSize: 4,
+                currencySymbol: '€',
+                currencyName: 'EUR',
+                nameSeparator: '_',
+                symbolSeparator: '-',
+                displayOrder: DisplayOrder.NAME_SIGN_NUMBER_SYMBOL
+            });
+            expect(input.getFormattedValue()).toBe('EUR_7  6279  3759  8757  9876.734-€');
+            expect(inputElement.value).toBe('EUR_7  6279  3759  8757  9876.734-€');
+        });
+
+    });
+
+    describe('strict mode', () => {
+        it('ensures that decimal places are always displayed', () => {
+            input.enableStrictMode();
+            input.setValue('1234567.89');
+            expect(input.getFormattedValue()).toBe('$1,234,567.89');
         });
     });
 

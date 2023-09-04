@@ -181,6 +181,54 @@ describe('CurrencyInput', () => {
 
     });
 
+    it('should insert a zero when all numbers before decimal point are deleted', async () => {
+        input.setValue('123.00');
+
+        await userEvent.type(inputElement,    '{backspace}', {
+            initialSelectionStart: 1,
+            initialSelectionEnd: 4,
+        });
+        expect(inputElement.value).toBe('$0.00');
+        expect(input.getValue()).toBe('0.00');
+
+        input.setValue('123.00');
+        await userEvent.type(inputElement,    '{backspace}{backspace}{backspace}{backspace}{backspace}', {
+            initialSelectionStart: 7,
+            initialSelectionEnd: 7,
+        });
+        expect(inputElement.value).toBe('$1');
+        expect(input.getFormattedValue()).toBe('$1.00');
+        expect(input.getValue()).toBe('1.00');
+        await userEvent.type(inputElement,    '{backspace}', {
+            initialSelectionStart: 2,
+            initialSelectionEnd: 2,
+        });
+        expect(inputElement.value).toBe('$0');
+        expect(input.getFormattedValue()).toBe('$0.00');
+        expect(input.getValue()).toBe('0.00');
+
+        input.enableStrictMode();
+        input.setValue('123.00');
+        expect(inputElement.value).toBe('$123.00');
+        expect(input.getFormattedValue()).toBe('$123.00');
+        expect(input.getValue()).toBe('123.00');
+        await userEvent.type(inputElement,    '{backspace}{backspace}', {
+            initialSelectionStart: 4,
+            initialSelectionEnd: 4,
+        });
+        expect(inputElement.value).toBe('$1.00');
+        expect(input.getFormattedValue()).toBe('$1.00');
+        expect(input.getValue()).toBe('1.00');
+        await userEvent.type(inputElement,    '{backspace}', {
+            initialSelectionStart: 2,
+            initialSelectionEnd: 2,
+        });
+        expect(inputElement.value).toBe('$0.00');
+        expect(input.getFormattedValue()).toBe('$0.00');
+        expect(input.getValue()).toBe('0.00');
+
+    });
+
     it('should discard incorrect inputs',  async () => {
         expect(inputElement.value).toBe('$0.00');
         expect(input.getValue()).toBe('0.00');
@@ -635,10 +683,113 @@ describe('CurrencyInput', () => {
     });
 
     describe('strict mode', () => {
-        it('ensures that decimal places are always displayed', () => {
+        beforeEach(() => {
             input.enableStrictMode();
             input.setValue('1234567.89');
             expect(input.getFormattedValue()).toBe('$1,234,567.89');
+            expect(input.getValue()).toBe('1234567.89');
+            expect(inputElement.value).toBe('$1,234,567.89');
+        })
+
+        it('should replace numbers behind decimal point on insert', async () => {
+            await userEvent.type(inputElement, '9', {
+                initialSelectionStart: 1,
+                initialSelectionEnd: 1
+            });
+            expect(input.getFormattedValue()).toBe('$91,234,567.89');
+            expect(input.getValue()).toBe('91234567.89');
+            expect(inputElement.value).toBe('$91,234,567.89');
+
+            await userEvent.type(inputElement, '1', {
+                initialSelectionStart: 11,
+                initialSelectionEnd: 12
+            });
+            expect(input.getFormattedValue()).toBe('$91,234,567.89');
+            expect(input.getValue()).toBe('91234567.89');
+            expect(inputElement.value).toBe('$91,234,567.89');
+            expect(inputElement.selectionStart).toBe(12);
+            expect(inputElement.selectionEnd).toBe(12);
+
+            await userEvent.type(inputElement, '1', {
+                initialSelectionStart: 12,
+                initialSelectionEnd: 12
+            });
+            expect(input.getFormattedValue()).toBe('$91,234,567.19');
+            expect(input.getValue()).toBe('91234567.19');
+            expect(inputElement.value).toBe('$91,234,567.19');
+            expect(inputElement.selectionStart).toBe(13);
+            expect(inputElement.selectionEnd).toBe(13);
+
+            await userEvent.type(inputElement, '1', {
+                initialSelectionStart: 13,
+                initialSelectionEnd: 13
+            });
+            expect(input.getFormattedValue()).toBe('$91,234,567.11');
+            expect(input.getValue()).toBe('91234567.11');
+            expect(inputElement.value).toBe('$91,234,567.11');
+            expect(inputElement.selectionStart).toBe(14);
+            expect(inputElement.selectionEnd).toBe(14);
+
+            input.format({
+                currencyName: 'USD'
+            });
+            expect(input.getFormattedValue()).toBe('$91,234,567.11 USD');
+            expect(input.getValue()).toBe('91234567.11');
+            expect(inputElement.value).toBe('$91,234,567.11 USD');
+
+            await userEvent.type(inputElement, '1', {
+                initialSelectionStart: 14,
+                initialSelectionEnd: 14
+            });
+            expect(input.getFormattedValue()).toBe('$91,234,567.11 USD');
+            expect(input.getValue()).toBe('91234567.11');
+            expect(inputElement.value).toBe('$91,234,567.11 USD');
+            expect(inputElement.selectionStart).toBe(14);
+            expect(inputElement.selectionEnd).toBe(14);
+
+            input.disableStrictMode();
+            await userEvent.type(inputElement, '0', {
+                initialSelectionStart: 12,
+                initialSelectionEnd: 12
+            });
+            expect(input.getFormattedValue()).toBe('$91,234,567.11 USD');
+            expect(input.getValue()).toBe('91234567.11');
+            expect(inputElement.value).toBe('$91,234,567.11 USD');
+            expect(inputElement.selectionStart).toBe(12);
+            expect(inputElement.selectionEnd).toBe(12);
+
+        });
+
+        it('should replace numbers behind decimal point with zeroes on backspace', async () => {
+            await userEvent.type(inputElement, '{backspace}', {
+                initialSelectionStart: 13,
+                initialSelectionEnd: 13
+            });
+            expect(input.getFormattedValue()).toBe('$1,234,567.80');
+            expect(input.getValue()).toBe('1234567.80');
+            expect(inputElement.value).toBe('$1,234,567.80');
+            expect(inputElement.selectionStart).toBe(12);
+            expect(inputElement.selectionEnd).toBe(12);
+
+            await userEvent.type(inputElement, '{backspace}', {
+                initialSelectionStart: 12,
+                initialSelectionEnd: 12
+            });
+            expect(input.getFormattedValue()).toBe('$1,234,567.00');
+            expect(input.getValue()).toBe('1234567.00');
+            expect(inputElement.value).toBe('$1,234,567.00');
+            expect(inputElement.selectionStart).toBe(11);
+            expect(inputElement.selectionEnd).toBe(11);
+
+            await userEvent.type(inputElement, '{backspace}', {
+                initialSelectionStart: 11,
+                initialSelectionEnd: 11
+            });
+            expect(input.getFormattedValue()).toBe('$1,234,567.00');
+            expect(input.getValue()).toBe('1234567.00');
+            expect(inputElement.value).toBe('$1,234,567.00');
+            expect(inputElement.selectionStart).toBe(10);
+            expect(inputElement.selectionEnd).toBe(10);
         });
     });
 

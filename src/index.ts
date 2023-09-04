@@ -21,6 +21,7 @@ export class IntlCurrencyInput {
     private handleInput(e: InputEvent) {
         if (this._inputValue === this._input.value) return;
         // TODO: negative numbers / signed values +/-
+        // TODO: delete last digit --> convert to zero
 
         let inputRejected: boolean = false;
         const prefix = this._formatter.prefix(this._money.isNegative);
@@ -34,18 +35,31 @@ export class IntlCurrencyInput {
             let numberRegexPattern: string = '^';
             if (this._money.floatingPointPrecision > 0 && this._formatter.decimalSeparator !== '') {
                 if (this._strictMode) {
+                    /* istanbul ignore next */
                     const start = this._input.selectionStart === null ? 0 : this._input.selectionStart;
+                    /* istanbul ignore next */
                     const end = this._input.selectionEnd === null ? 0 : this._input.selectionEnd;
                     const decimalSepPos = this._input.value.indexOf(this._formatter.decimalSeparator);
-                    if (start === end && start > decimalSepPos && e.inputType === 'insertText') {
-                        let stringArray = this._input.value.split('');
-                        stringArray = stringArray.slice(0, start).concat(stringArray.slice(start + 1));
 
-                        const suffixPos = this._input.value.search(suffixPattern);
-                        const caretPos = start > suffixPos - 1 ? suffixPos - 1 : start;
+                    if (start === end && start > decimalSepPos) {
+                        let inputString = this._input.value;
+                        if (e.inputType === 'insertText') {
+                            inputString = inputString.slice(0, start).concat(inputString.slice(start + 1));
 
-                        this._input.value = stringArray.join('');
-                        this._input.setSelectionRange(caretPos, caretPos);
+                            const suffixPos = this._input.value.search(suffixPattern);
+                            const caretPos = start > suffixPos - 1 ? suffixPos - 1 : start;
+
+                            this._input.value = inputString;
+                            if (decimalSepPos === -1) {
+                                this._input.setSelectionRange(start - 1, start - 1);
+                            } else {
+                                this._input.setSelectionRange(caretPos, caretPos);
+                            }
+                        } else if (e.inputType === 'deleteContentBackward' && start > decimalSepPos) {
+                            inputString = inputString.slice(0, start).concat('0').concat(inputString.slice(start));
+                            this._input.value = inputString;
+                            this._input.setSelectionRange(start, start);
+                        }
                     }
                     numberRegexPattern += '(0|[1-9]\\d*)' + esc(this._formatter.decimalSeparator);
                     numberRegexPattern += '\\d{' + this._money.floatingPointPrecision + ',' + this._money.floatingPointPrecision + '}';
@@ -59,10 +73,17 @@ export class IntlCurrencyInput {
                 numberRegexPattern += '[1-9]\\d*';
             }
             numberRegexPattern += '$';
+
             const valuePattern = new RegExp(numberRegexPattern);
 
             const value = this._input.value.replace(prefixPattern,'').replace(suffixPattern,'');
-            const rawValue = value.replace(RegExp(this._formatter.groupSeparator, 'g'), '');
+            let rawValue = value.replace(RegExp(this._formatter.groupSeparator, 'g'), '');
+
+            if (new RegExp(`^${esc(this._formatter.decimalSeparator)}\\d*$`).test(rawValue)) {
+                rawValue = '0' + rawValue;
+            } else if (rawValue === '') {
+                rawValue = '0';
+            }
 
             if (valuePattern.test(rawValue)) {
                 const groupSize = this._formatter.groupSize;

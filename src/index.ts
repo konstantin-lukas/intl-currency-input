@@ -1,5 +1,4 @@
 import {FormatterInitializer, Money, MoneyCalculator, MoneyFormatter} from "moneydew";
-import {input} from "@testing-library/user-event/event/input";
 /**
  * @desc Escapes a string for regex construction.
  */
@@ -67,6 +66,7 @@ export class IntlCurrencyInput {
             try {
                 this._input.setSelectionRange(start, start);
             } catch (e) {
+                /* istanbul ignore next */
                 this._input.setSelectionRange(0, 0);
             }
         }

@@ -1017,9 +1017,123 @@ describe('CurrencyInput', () => {
     });
 
     describe('min/max', () => {
-        // TODO: SET VALUE AFTER MIN/MAX
-        // TODO: SET MIN/MAX AFTER VALUE
+        it('should adjust the current value when set', async () => {
+            input.setValue('-11.42');
+            expect(input.getFormattedValue()).toBe('-$11.42');
+            expect(input.getValue()).toBe('-11.42');
+            expect(inputElement.value).toBe('-$11.42');
+
+            input.setMin('-10.00');
+            expect(input.getFormattedValue()).toBe('-$10.00');
+            expect(input.getValue()).toBe('-10.00');
+            expect(inputElement.value).toBe('-$10.00');
+
+            input.setMin('-11.00');
+            expect(input.getFormattedValue()).toBe('-$10.00');
+            expect(input.getValue()).toBe('-10.00');
+            expect(inputElement.value).toBe('-$10.00');
+
+            input.setValue('-11.01');
+            expect(input.getFormattedValue()).toBe('-$11.00');
+            expect(input.getValue()).toBe('-11.00');
+            expect(inputElement.value).toBe('-$11.00');
+
+            input.setValue('12.42');
+            expect(input.getFormattedValue()).toBe('$12.42');
+            expect(input.getValue()).toBe('12.42');
+            expect(inputElement.value).toBe('$12.42');
+
+            input.setMax('10.00');
+            expect(input.getFormattedValue()).toBe('$10.00');
+            expect(input.getValue()).toBe('10.00');
+            expect(inputElement.value).toBe('$10.00');
+
+            input.setMax('11.00');
+            expect(input.getFormattedValue()).toBe('$10.00');
+            expect(input.getValue()).toBe('10.00');
+            expect(inputElement.value).toBe('$10.00');
+
+            input.setValue('15.00');
+            expect(input.getFormattedValue()).toBe('$11.00');
+            expect(input.getValue()).toBe('11.00');
+            expect(inputElement.value).toBe('$11.00');
+
+            input.setMin(null);
+            input.setMax(null);
+
+            input.setValue('200.00');
+            expect(input.getFormattedValue()).toBe('$200.00');
+            expect(input.getValue()).toBe('200.00');
+            expect(inputElement.value).toBe('$200.00');
+
+            input.setValue('-200.00');
+            expect(input.getFormattedValue()).toBe('-$200.00');
+            expect(input.getValue()).toBe('-200.00');
+            expect(inputElement.value).toBe('-$200.00');
+
+            input.setValue('-21000.00');
+            await userEvent.type(inputElement, '{delete}', {
+                initialSelectionStart: 5,
+                initialSelectionEnd: 5
+            });
+            expect(input.getFormattedValue()).toBe('-$2,100.00');
+            expect(input.getValue()).toBe('-2100.00');
+            expect(inputElement.value).toBe('-$2,100.00');
+
+            await userEvent.type(inputElement, '{delete}', {
+                initialSelectionStart: 2,
+                initialSelectionEnd: 2
+            });
+            expect(input.getFormattedValue()).toBe('-$100.00');
+            expect(input.getValue()).toBe('-100.00');
+            expect(inputElement.value).toBe('-$100.00');
+
+            input.setMin('-100.00');
+            await userEvent.type(inputElement, '1', {
+                initialSelectionStart: 2,
+                initialSelectionEnd: 2
+            });
+            expect(input.getFormattedValue()).toBe('-$100.00');
+            expect(input.getValue()).toBe('-100.00');
+            expect(inputElement.value).toBe('-$100.00');
+
+        });
+
+        it('should reject invalid values', () => {
+            expect(() => {
+                input.setMin('-1');
+            }).toThrow();
+            expect(() => {
+                input.setMax('-1');
+            }).toThrow();
+            expect(() => {
+                input.setMin('-1.00');
+            }).not.toThrow();
+            expect(() => {
+                input.setMax('-2.00');
+            }).toThrow();
+            expect(() => {
+                input.setMax('2.00');
+            }).not.toThrow();
+            expect(() => {
+                input.setMin('3.00');
+            }).toThrow();
+        });
+
+        it('should reset limits when a value with a new floating point precision is introduced', () => {
+            input.setMin('-10.00');
+            input.setMax('10.00');
+            input.setValue('0.0');
+
+            input.setValue('-20.0');
+            expect(input.getFormattedValue()).toBe('-$20.0');
+            expect(input.getValue()).toBe('-20.0');
+            expect(inputElement.value).toBe('-$20.0');
+
+            input.setValue('20.0');
+            expect(input.getFormattedValue()).toBe('$20.0');
+            expect(input.getValue()).toBe('20.0');
+            expect(inputElement.value).toBe('$20.0');
+        });
     });
-
-
 });

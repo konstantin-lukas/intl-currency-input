@@ -1,5 +1,5 @@
 import userEvent from '@testing-library/user-event';
-import {IntlCurrencyInput} from "../src";
+import IntlCurrencyInput from "../src";
 import {DisplayOrder, Money, MyriadMode} from "moneydew";
 
 describe('CurrencyInput', () => {

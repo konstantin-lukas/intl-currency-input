@@ -1,4 +1,5 @@
 import {FormatterInitializer, Money, MoneyCalculator, MoneyFormatter} from "moneydew";
+
 /**
  * @desc Escapes a string for regex construction.
  */
@@ -6,7 +7,7 @@ const esc = (string: string) => {
     return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-export class IntlCurrencyInput {
+export default class IntlCurrencyInput {
     private _input: HTMLInputElement;
     private _money: Money;
     private _min: Money | null = null;

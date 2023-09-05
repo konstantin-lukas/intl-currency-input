@@ -23,7 +23,7 @@ if (elem) {
             displayOrder: DisplayOrder.NAME_SIGN_NUMBER_SYMBOL,
             signSeparator: '',
             negativeSign: '-',
-            positiveSign: ''
+            positiveSign: '+'
         });
         document.getElementById('clicky')?.addEventListener('click', () => {
             input.enableStrictMode();
@@ -31,5 +31,7 @@ if (elem) {
         document.getElementById('yeah')?.addEventListener('click', () => {
             input.disableStrictMode();
         });
+        input.setMin('-1.00');
+        input.setMax('1.00');
     }
 }

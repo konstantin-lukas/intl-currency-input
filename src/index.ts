@@ -53,7 +53,21 @@ export class IntlCurrencyInput {
 
     private handleInput(e: InputEvent) {
         if (this._inputValue === this._input.value) return;
-        // TODO: negative numbers / signed values +/- overwrite
+
+        if (this._formatter.positiveSign.length === 1 &&
+            this._formatter.negativeSign.length === 1) {
+            const start = this._input.selectionStart;
+            this._input.value = this._input.value.replace(
+                this._formatter.positiveSign + this._formatter.negativeSign,
+                this._formatter.positiveSign).replace(
+                this._formatter.negativeSign + this._formatter.positiveSign,
+                this._formatter.negativeSign);
+            try {
+                this._input.setSelectionRange(start, start);
+            } catch (e) {
+                this._input.setSelectionRange(0, 0);
+            }
+        }
 
         let inputRejected: boolean = false;
         const posMatch: boolean = this._posPrefixPattern.test(this._input.value) && this._posSuffixPattern.test(this._input.value);
@@ -202,9 +216,11 @@ export class IntlCurrencyInput {
         if (!inputRejected)
             this._money.value = this.getValue();
 
-        inputRejected ||= this.fitInBoundaries();
+        const outOfBounds: boolean = this.fitInBoundaries();
+        inputRejected ||= outOfBounds;
 
         try {
+            if (outOfBounds) caretPos--;
             this._input.setSelectionRange(caretPos, caretPos);
         } catch (e) {
             /* istanbul ignore next */
@@ -493,7 +509,6 @@ export class IntlCurrencyInput {
      * Use this function to allow input of negative values.
      */
     public setMin(min: string | null) {
-        //TODO CURSOR POS
         if (min === null) {
             this._min = null;
         } else {
@@ -508,7 +523,6 @@ export class IntlCurrencyInput {
     }
 
     public setMax(max: string | null) {
-        //TODO CURSOR POS
         if (max === null) {
             this._max = null;
         } else {

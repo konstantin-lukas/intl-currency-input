@@ -3,7 +3,7 @@ This is a dependency-free easy-to-use vanilla JavaScript addon allowing you to c
 ## Installation
 First you need to include the plugin in your project. There are various ways you can do this.
 ### Download
-You can download the package from github right [here](https://github.com/konstantin-lukas/intl-currency-input/releases/tag/1.0.0). After you placed the file in your project, just add a reference to your HTML page.
+You can download the package from Github right [here](https://github.com/konstantin-lukas/intl-currency-input/releases/tag/1.0.0). After you placed the file in your project, just add a reference to your HTML page.
 ```html
 <script src="path-to-file/intl-currency-input.min.js"></script>
 ```
@@ -17,7 +17,7 @@ If you are working with Node perhaps you want to consider downloading the NPM pa
 ```bash
 npm i intl-currency-input --save
 ```
-Afterwards you can import it like so.
+Afterward you can import it like so.
 ```javascript
 const { CurrencyInput } = require('intl-currency-input');
 ```
@@ -98,14 +98,14 @@ preventInputFromIME: false //This will allow all kinds of crazy input like '„ÅäÈ
 ### `validCallback`
 This is a `function` to call when the user makes a correct input.
 ```javascript
-validCallback: function () { //This will execute whenever the user makes a correct input.
+validCallback: function() { //This will execute whenever the user makes a correct input.
     console.log('That\'s a valid input.');
 }
 ```
 ### `invalidCallback`
 This is a `function` to call when the user makes an incorrect input.
 ```javascript
-invalidCallback: function () { //This will execute for instance when trying to enter a letter.
+invalidCallback: function() { //This will execute for instance when trying to enter a letter.
     console.log('That\'s not a valid input.');
 }
 ```

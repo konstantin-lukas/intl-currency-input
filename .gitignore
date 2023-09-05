@@ -1,0 +1,9 @@
+node_modules
+dist
+coverage
+index.d.ts
+index.js
+index.mjs
+index.js.map
+index.mjs.map
+.idea

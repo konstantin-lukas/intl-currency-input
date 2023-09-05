@@ -18,12 +18,9 @@ if (elem) {
         console.log('VALUE: ' + input.getFormattedValue());
         console.log('PARSED VALUE: ' + input.getValue());
         input.format({
-            currencySymbol: '$',
-            currencyName: 'USD',
-            displayOrder: DisplayOrder.NAME_SIGN_NUMBER_SYMBOL,
-            signSeparator: '',
-            negativeSign: '-',
-            positiveSign: '+'
+            displayOrder: DisplayOrder.SYMBOL_SIGN_NUMBER_NAME,
+            positiveSign: '',
+            negativeSign: '-'
         });
         document.getElementById('clicky')?.addEventListener('click', () => {
             input.enableStrictMode();
@@ -31,7 +28,5 @@ if (elem) {
         document.getElementById('yeah')?.addEventListener('click', () => {
             input.disableStrictMode();
         });
-        input.setMin('-1.00');
-        input.setMax('1.00');
     }
 }

@@ -862,26 +862,163 @@ describe('CurrencyInput', () => {
             expect(inputElement.selectionStart).toBe(6);
             expect(inputElement.selectionEnd).toBe(6);
 
-            await userEvent.type(inputElement, '{delete}', {
-                initialSelectionStart: 6,
-                initialSelectionEnd: 6
-            });
-            expect(input.getFormattedValue()).toBe('$123.00');
-            expect(input.getValue()).toBe('123.00');
-            expect(inputElement.value).toBe('$123.00');
-            expect(inputElement.selectionStart).toBe(7);
-            expect(inputElement.selectionEnd).toBe(7);
+            for (let i = 6; i <= 7; i++) {
+                await userEvent.type(inputElement, '{delete}', {
+                    initialSelectionStart: i,
+                    initialSelectionEnd: i
+                });
+                expect(input.getFormattedValue()).toBe('$123.00');
+                expect(input.getValue()).toBe('123.00');
+                expect(inputElement.value).toBe('$123.00');
+                expect(inputElement.selectionStart).toBe(7);
+                expect(inputElement.selectionEnd).toBe(7);
+            }
 
-            await userEvent.type(inputElement, '{delete}', {
-                initialSelectionStart: 7,
-                initialSelectionEnd: 7
-            });
-            expect(input.getFormattedValue()).toBe('$123.00');
-            expect(input.getValue()).toBe('123.00');
-            expect(inputElement.value).toBe('$123.00');
-            expect(inputElement.selectionStart).toBe(7);
-            expect(inputElement.selectionEnd).toBe(7);
         });
+    });
+
+    describe('positive/negative value accepting inputs', () => {
+        it('should allow inputting signed numbers when one of the signs is the empty string', async () => {
+            input.format({
+               displayOrder: DisplayOrder.SYMBOL_SIGN_NUMBER_NAME
+            });
+
+            await userEvent.type(inputElement, '-', {
+                initialSelectionStart: 1,
+                initialSelectionEnd: 1
+            });
+
+            expect(input.getFormattedValue()).toBe('$0.00');
+            expect(input.getValue()).toBe('0.00');
+            expect(inputElement.value).toBe('$0.00');
+            expect(inputElement.selectionStart).toBe(1);
+            expect(inputElement.selectionEnd).toBe(1);
+
+            input.setValue('0.01');
+            await userEvent.type(inputElement, '-', {
+                initialSelectionStart: 1,
+                initialSelectionEnd: 1
+            });
+
+            expect(input.getFormattedValue()).toBe('$-0.01');
+            expect(input.getValue()).toBe('-0.01');
+            expect(inputElement.value).toBe('$-0.01');
+            expect(inputElement.selectionStart).toBe(2);
+            expect(inputElement.selectionEnd).toBe(2);
+
+            input.setValue('1.00');
+            for (let i = 2; i >= 1; i--) {
+                await userEvent.type(inputElement, '-', {
+                    initialSelectionStart: 1,
+                    initialSelectionEnd: 1
+                });
+
+                expect(input.getFormattedValue()).toBe('$-1.00');
+                expect(input.getValue()).toBe('-1.00');
+                expect(inputElement.value).toBe('$-1.00');
+                expect(inputElement.selectionStart).toBe(i);
+                expect(inputElement.selectionEnd).toBe(i);
+            }
+
+            input.format({
+                displayOrder: DisplayOrder.SYMBOL_SIGN_NUMBER_NAME,
+                positiveSign: '+',
+                negativeSign: ''
+            });
+            expect(input.getFormattedValue()).toBe('$1.00');
+            expect(input.getValue()).toBe('-1.00');
+            expect(inputElement.value).toBe('$1.00');
+
+            input.add('1.00');
+            expect(input.getFormattedValue()).toBe('$0.00');
+            expect(input.getValue()).toBe('0.00');
+            expect(inputElement.value).toBe('$0.00');
+
+            input.add('1.00');
+            expect(input.getFormattedValue()).toBe('$+1.00');
+            expect(input.getValue()).toBe('1.00');
+            expect(inputElement.value).toBe('$+1.00');
+
+            input.format({
+                displayOrder: DisplayOrder.SYMBOL_SIGN_NUMBER_NAME,
+                positiveSign: '',
+                negativeSign: '-'
+            });
+
+            input.subtract('1.00');
+            expect(input.getFormattedValue()).toBe('$0.00');
+            expect(input.getValue()).toBe('0.00');
+            expect(inputElement.value).toBe('$0.00');
+
+            input.subtract('1.00');
+            expect(input.getFormattedValue()).toBe('$-1.00');
+            expect(input.getValue()).toBe('-1.00');
+            expect(inputElement.value).toBe('$-1.00');
+
+        });
+
+        it('should let you overwrite the current sign when inserting a character left of ' +
+            'the current sign if both signs have length one', async () => {
+            input.format({
+                displayOrder: DisplayOrder.SYMBOL_SIGN_NUMBER_NAME,
+                positiveSign: '+',
+                negativeSign: '-'
+            });
+            expect(input.getFormattedValue()).toBe('$+0.00');
+            expect(input.getValue()).toBe('0.00');
+            expect(inputElement.value).toBe('$+0.00');
+
+            await userEvent.type(inputElement, '-', {
+                initialSelectionStart: 1,
+                initialSelectionEnd: 1
+            });
+            expect(input.getFormattedValue()).toBe('$+0.00');
+            expect(input.getValue()).toBe('0.00');
+            expect(inputElement.value).toBe('$+0.00');
+
+            input.setValue('1.00');
+            expect(input.getFormattedValue()).toBe('$+1.00');
+            expect(input.getValue()).toBe('1.00');
+            expect(inputElement.value).toBe('$+1.00');
+
+            for (let i = 2; i >= 1; i--) {
+                await userEvent.type(inputElement, '-', {
+                    initialSelectionStart: 1,
+                    initialSelectionEnd: 1
+                });
+                expect(input.getFormattedValue()).toBe('$-1.00');
+                expect(input.getValue()).toBe('-1.00');
+                expect(inputElement.value).toBe('$-1.00');
+                expect(inputElement.selectionStart).toBe(i);
+                expect(inputElement.selectionEnd).toBe(i);
+
+            }
+            await userEvent.type(inputElement, '+', {
+                initialSelectionStart: 1,
+                initialSelectionEnd: 1
+            });
+            expect(input.getFormattedValue()).toBe('$+1.00');
+            expect(input.getValue()).toBe('1.00');
+            expect(inputElement.value).toBe('$+1.00');
+            expect(inputElement.selectionStart).toBe(2);
+            expect(inputElement.selectionEnd).toBe(2);
+        });
+
+        it('should allow entering a negative sign in front of a zero value when set to do so', async () => {
+            input.allowNegativeZero(true);
+            await userEvent.type(inputElement, '-', {
+                initialSelectionStart: 1,
+                initialSelectionEnd: 1
+            });
+            expect(input.getFormattedValue()).toBe('$0.00');
+            expect(input.getValue()).toBe('0.00');
+            expect(inputElement.value).toBe('-$0.00');
+        });
+    });
+
+    describe('min/max', () => {
+        // TODO: SET VALUE AFTER MIN/MAX
+        // TODO: SET MIN/MAX AFTER VALUE
     });
 
 

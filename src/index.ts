@@ -1,4 +1,5 @@
 import {FormatterInitializer, Money, MoneyCalculator, MoneyFormatter} from "moneydew";
+import {input} from "@testing-library/user-event/event/input";
 /**
  * @desc Escapes a string for regex construction.
  */
@@ -25,6 +26,7 @@ export class IntlCurrencyInput {
     private _posSuffixPattern!: RegExp;
     private _negPrefixPattern!: RegExp;
     private _negSuffixPattern!: RegExp;
+    private _allowNegativeZero: boolean = false;
 
     /**
      * @desc Checks if currently held value is within boundaries and adjusts value accordingly.
@@ -68,6 +70,7 @@ export class IntlCurrencyInput {
                 this._input.setSelectionRange(0, 0);
             }
         }
+
 
         let inputRejected: boolean = false;
         const posMatch: boolean = this._posPrefixPattern.test(this._input.value) && this._posSuffixPattern.test(this._input.value);
@@ -145,13 +148,15 @@ export class IntlCurrencyInput {
             let rawValue = value.replace(RegExp(this._formatter.groupSeparator, 'g'), '');
 
 
-
             if (new RegExp(`^${esc(this._formatter.decimalSeparator)}\\d*$`).test(rawValue)) {
                 rawValue = '0' + rawValue;
             } else if (rawValue === '') {
                 rawValue = '0';
             }
 
+            if (this._allowNegativeZero && rawValue.match(/^-0\.?0*$/)) {
+                rawValue = rawValue.substring(1);
+            }
 
             if (valuePattern.test(rawValue)) {
                 const groupSize = this._formatter.groupSize;
@@ -181,7 +186,12 @@ export class IntlCurrencyInput {
                 } else {
                     result = rawValue;
                 }
-                result = matchedPrefix + result + matchedSuffix;
+                if (!this._allowNegativeZero && rawValue.match(/^0\.?0*$/))
+                    result = this._posPrefix + result + this._posSuffix;
+                else if (this._allowNegativeZero && rawValue.match(/^0\.?0*$/))
+                    result = this._negPrefix + result + this._negSuffix;
+                else
+                    result = matchedPrefix + result + matchedSuffix;
                 this._inputValue = result;
             } else {
                 inputRejected = true;
@@ -402,7 +412,6 @@ export class IntlCurrencyInput {
      */
     public getValue() {
 
-
         const negativePriority = this._formatter.positiveSign === '';
 
         const posMatch: boolean = this._posPrefixPattern.test(this._input.value) && this._posSuffixPattern.test(this._input.value);
@@ -432,7 +441,8 @@ export class IntlCurrencyInput {
                 rawValue += '0';
             }
         }
-        if (negMatch)
+
+        if ((negativePriority ? negMatch : negMatch && !posMatch) && !rawValue.match(/^(0|0\.0+)$/))
             rawValue = '-' + rawValue;
         return rawValue;
     }
@@ -534,6 +544,14 @@ export class IntlCurrencyInput {
             this._max = newMax;
         }
         this.fitInBoundaries();
+    }
+
+    /**
+     * @desc If set to true, values like -0 or -0.00 cannot be entered. This only has an effect on the displayed value.
+     * Note that {@link getValue} doesn't return zero values with a leading dash either way, so it's not affected by this.
+     */
+    public allowNegativeZero(yes: boolean) {
+        this._allowNegativeZero = yes;
     }
 
 }

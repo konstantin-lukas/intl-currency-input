@@ -679,6 +679,52 @@ describe('CurrencyInput', () => {
             expect(input.getFormattedValue()).toBe('EUR_7  6279  3759  8757  9876.734-€');
             expect(inputElement.value).toBe('EUR_7  6279  3759  8757  9876.734-€');
         });
+        it('should only except positve/negative signs that one character long (one can be empty)', () => {
+            expect(() => {
+                input.format({
+                    positiveSign: '+-'
+                });
+            }).toThrow();
+            expect(() => {
+                input.format({
+                    negativeSign: '+-'
+                });
+            }).toThrow();
+            expect(() => {
+                input.format({
+                    positiveSign: 'xy',
+                    negativeSign: 'ab'
+                });
+            }).toThrow();
+            expect(() => {
+                input.format({
+                    positiveSign: '',
+                    negativeSign: '-'
+                });
+            }).not.toThrow();
+            expect(() => {
+                input.format({
+                    positiveSign: '+',
+                    negativeSign: '-'
+                });
+            }).not.toThrow();
+            expect(() => {
+                input.format({
+                    positiveSign: '+',
+                    negativeSign: ''
+                });
+            }).not.toThrow();
+            expect(() => {
+                input.format({
+                    positiveSign: '',
+                });
+            }).not.toThrow();
+            expect(() => {
+                input.format({
+                    negativeSign: '',
+                });
+            }).toThrow();
+        });
 
     });
 
@@ -760,7 +806,7 @@ describe('CurrencyInput', () => {
 
         });
 
-        it('should replace numbers behind decimal point with zeroes on backspace', async () => {
+        it('should replace numbers behind decimal point with zeroes on backspace/delete', async () => {
             await userEvent.type(inputElement, '{backspace}', {
                 initialSelectionStart: 13,
                 initialSelectionEnd: 13
@@ -790,6 +836,51 @@ describe('CurrencyInput', () => {
             expect(inputElement.value).toBe('$1,234,567.00');
             expect(inputElement.selectionStart).toBe(10);
             expect(inputElement.selectionEnd).toBe(10);
+
+            input.setValue('123.45');
+            expect(input.getFormattedValue()).toBe('$123.45');
+            expect(input.getValue()).toBe('123.45');
+            expect(inputElement.value).toBe('$123.45');
+
+            await userEvent.type(inputElement, '{delete}', {
+                initialSelectionStart: 4,
+                initialSelectionEnd: 4
+            });
+            expect(input.getFormattedValue()).toBe('$123.45');
+            expect(input.getValue()).toBe('123.45');
+            expect(inputElement.value).toBe('$123.45');
+            expect(inputElement.selectionStart).toBe(4);
+            expect(inputElement.selectionEnd).toBe(4);
+
+            await userEvent.type(inputElement, '{delete}', {
+                initialSelectionStart: 5,
+                initialSelectionEnd: 5
+            });
+            expect(input.getFormattedValue()).toBe('$123.05');
+            expect(input.getValue()).toBe('123.05');
+            expect(inputElement.value).toBe('$123.05');
+            expect(inputElement.selectionStart).toBe(6);
+            expect(inputElement.selectionEnd).toBe(6);
+
+            await userEvent.type(inputElement, '{delete}', {
+                initialSelectionStart: 6,
+                initialSelectionEnd: 6
+            });
+            expect(input.getFormattedValue()).toBe('$123.00');
+            expect(input.getValue()).toBe('123.00');
+            expect(inputElement.value).toBe('$123.00');
+            expect(inputElement.selectionStart).toBe(7);
+            expect(inputElement.selectionEnd).toBe(7);
+
+            await userEvent.type(inputElement, '{delete}', {
+                initialSelectionStart: 7,
+                initialSelectionEnd: 7
+            });
+            expect(input.getFormattedValue()).toBe('$123.00');
+            expect(input.getValue()).toBe('123.00');
+            expect(inputElement.value).toBe('$123.00');
+            expect(inputElement.selectionStart).toBe(7);
+            expect(inputElement.selectionEnd).toBe(7);
         });
     });
 

@@ -23,7 +23,7 @@ if (elem) {
             displayOrder: DisplayOrder.NAME_SIGN_NUMBER_SYMBOL,
             signSeparator: '',
             negativeSign: '-',
-            positiveSign: '+'
+            positiveSign: ''
         });
         document.getElementById('clicky')?.addEventListener('click', () => {
             input.enableStrictMode();

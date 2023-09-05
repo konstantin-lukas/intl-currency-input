@@ -1,5 +1,4 @@
 import {FormatterInitializer, Money, MoneyCalculator, MoneyFormatter} from "moneydew";
-
 /**
  * @desc Escapes a string for regex construction.
  */
@@ -10,28 +9,71 @@ const esc = (string: string) => {
 export class IntlCurrencyInput {
     private _input: HTMLInputElement;
     private _money: Money;
+    private _min: Money | null = null;
+    private _max: Money | null = null;
     private _inputValue!: string;
     private _formatter!: MoneyFormatter;
     private _eventListener: (e: InputEvent) => void;
     private _validCallback: null | (() => void) = null;
     private _invalidCallback: null | (() => void) = null;
     private _strictMode: boolean = false;
-    private _allowNegativeValues: boolean = true;
+    private _posPrefix!: string;
+    private _posSuffix!: string;
+    private _negPrefix!: string;
+    private _negSuffix!: string;
+    private _posPrefixPattern!: RegExp;
+    private _posSuffixPattern!: RegExp;
+    private _negPrefixPattern!: RegExp;
+    private _negSuffixPattern!: RegExp;
+
+    /**
+     * @desc Checks if currently held value is within boundaries and adjusts value accordingly.
+     * @returns A bool representing whether the previous value was out of bounds and an adjustment was made.
+     */
+    private fitInBoundaries(): boolean {
+
+        if (this._min) {
+            const max = MoneyCalculator.max(this._money, this._min);
+            if (max === this._min) {
+                this.setValue(this._min.value);
+                return true;
+            }
+        }
+
+        if (this._max) {
+            const min = MoneyCalculator.min(this._money, this._max);
+            if (min === this._max) {
+                this.setValue(this._max.value);
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private handleInput(e: InputEvent) {
         if (this._inputValue === this._input.value) return;
-        // TODO: negative numbers / signed values +/-
-        // TODO: delete last digit --> convert to zero
+        // TODO: negative numbers / signed values +/- overwrite
 
         let inputRejected: boolean = false;
-        const prefix = this._formatter.prefix(this._money.isNegative);
-        const suffix = this._formatter.suffix(this._money.isNegative);
-        const prefixPattern: RegExp = new RegExp('^' + esc(prefix));
-        const suffixPattern: RegExp = new RegExp(esc(suffix) + '$');
+        const posMatch: boolean = this._posPrefixPattern.test(this._input.value) && this._posSuffixPattern.test(this._input.value);
+        const negMatch: boolean = this._negPrefixPattern.test(this._input.value) && this._negSuffixPattern.test(this._input.value);
 
 
-        if (prefixPattern.test(this._input.value) && suffixPattern.test(this._input.value)) {
-
+        if (posMatch || negMatch) {
+            const negativePriority = this._formatter.positiveSign === '';
+            const matchedPrefix = negativePriority ?
+                (negMatch ? this._negPrefix : this._posPrefix) :
+                (posMatch ? this._posPrefix : this._negPrefix);
+            const matchedSuffix = negativePriority ?
+                (negMatch ? this._negSuffix : this._posSuffix) :
+                (posMatch ? this._posSuffix : this._negSuffix);
+            const matchedPrefixPattern = negativePriority ?
+                (negMatch ? this._negPrefixPattern : this._posPrefixPattern) :
+                (posMatch ? this._posPrefixPattern : this._negPrefixPattern);
+            const matchedSuffixPattern = negativePriority ?
+                (negMatch ? this._negSuffixPattern : this._posSuffixPattern) :
+                (posMatch ? this._posSuffixPattern : this._negSuffixPattern);
             let numberRegexPattern: string = '^';
             if (this._money.floatingPointPrecision > 0 && this._formatter.decimalSeparator !== '') {
                 if (this._strictMode) {
@@ -46,7 +88,7 @@ export class IntlCurrencyInput {
                         if (e.inputType === 'insertText') {
                             inputString = inputString.slice(0, start).concat(inputString.slice(start + 1));
 
-                            const suffixPos = this._input.value.search(suffixPattern);
+                            const suffixPos = this._input.value.search(matchedSuffixPattern);
                             const caretPos = start > suffixPos - 1 ? suffixPos - 1 : start;
 
                             this._input.value = inputString;
@@ -55,10 +97,18 @@ export class IntlCurrencyInput {
                             } else {
                                 this._input.setSelectionRange(caretPos, caretPos);
                             }
-                        } else if (e.inputType === 'deleteContentBackward' && start > decimalSepPos) {
+                        } else if (e.inputType === 'deleteContentBackward' &&
+                            start > decimalSepPos &&
+                            start <= this._input.value.length + 1) {
                             inputString = inputString.slice(0, start).concat('0').concat(inputString.slice(start));
                             this._input.value = inputString;
                             this._input.setSelectionRange(start, start);
+                        } else if (e.inputType === 'deleteContentForward' &&
+                            start > decimalSepPos &&
+                            start <= this._input.value.length) {
+                            inputString = inputString.slice(0, start).concat('0').concat(inputString.slice(start));
+                            this._input.value = inputString;
+                            this._input.setSelectionRange(start + 1, start + 1);
                         }
                     }
                     numberRegexPattern += '(0|[1-9]\\d*)' + esc(this._formatter.decimalSeparator);
@@ -76,14 +126,18 @@ export class IntlCurrencyInput {
 
             const valuePattern = new RegExp(numberRegexPattern);
 
-            const value = this._input.value.replace(prefixPattern,'').replace(suffixPattern,'');
+            const value = this._input.value.replace(matchedPrefixPattern,'').replace(matchedSuffixPattern,'');
+
             let rawValue = value.replace(RegExp(this._formatter.groupSeparator, 'g'), '');
+
+
 
             if (new RegExp(`^${esc(this._formatter.decimalSeparator)}\\d*$`).test(rawValue)) {
                 rawValue = '0' + rawValue;
             } else if (rawValue === '') {
                 rawValue = '0';
             }
+
 
             if (valuePattern.test(rawValue)) {
                 const groupSize = this._formatter.groupSize;
@@ -113,7 +167,7 @@ export class IntlCurrencyInput {
                 } else {
                     result = rawValue;
                 }
-                result = prefix + result + suffix;
+                result = matchedPrefix + result + matchedSuffix;
                 this._inputValue = result;
             } else {
                 inputRejected = true;
@@ -129,6 +183,7 @@ export class IntlCurrencyInput {
         const newLength = this._inputValue.length;
 
         this._input.value = this._inputValue;
+        const isNegative = this._negPrefixPattern.test(this._inputValue) && this._negSuffixPattern.test(this._inputValue);
 
         if (newLength < oldLength)
             caretPos -= (oldLength - newLength);
@@ -137,8 +192,17 @@ export class IntlCurrencyInput {
 
         if (inputRejected && e.inputType === 'deleteContentForward')
             caretPos--;
-        else if (!inputRejected && e.inputType === 'deleteContentForward' && oldCaretPos >= prefix.length && caretPos < prefix.length)
+        else if (!inputRejected &&
+            e.inputType === 'deleteContentForward' &&
+            oldCaretPos >= (isNegative ? this._negPrefix.length : this._posPrefix.length) &&
+            caretPos < (isNegative ? this._negPrefix.length : this._posPrefix.length))
             caretPos += this._formatter.groupSeparator.length;
+
+
+        if (!inputRejected)
+            this._money.value = this.getValue();
+
+        inputRejected ||= this.fitInBoundaries();
 
         try {
             this._input.setSelectionRange(caretPos, caretPos);
@@ -151,7 +215,6 @@ export class IntlCurrencyInput {
             if (this._invalidCallback)
                 this._invalidCallback();
         } else {
-            this._money.value = this.getValue();
             if (this._validCallback)
                 this._validCallback();
         }
@@ -219,21 +282,6 @@ export class IntlCurrencyInput {
             return false;
         }
 
-        if (typeof f.digitCharacters !== 'undefined') {
-            f.digitCharacters = undefined;
-            console.warn('The digitCharacters option is not supported in this version. Value will be ignored');
-        }
-
-        if (typeof f.myriadMode !== 'undefined') {
-            f.myriadMode = undefined;
-            console.warn('The myriadMode option is not supported in this version. Value will be ignored');
-        }
-
-        if (typeof f.myriadCharacters !== 'undefined') {
-            f.myriadCharacters = undefined;
-            console.warn('The digitCharacters option is not supported in this version. Value will be ignored');
-        }
-
         if (typeof f.decimalSeparator !== 'undefined' && f.decimalSeparator === '')
             throw new Error('Decimal separator cannot be empty.');
 
@@ -256,8 +304,38 @@ export class IntlCurrencyInput {
                 f.positiveSign === '-') )
             throw new Error('The positive and negative sign may not be the same.');
 
+        if (typeof f.positiveSign !== 'undefined' && f.positiveSign.length > 1 ||
+            typeof f.negativeSign !== 'undefined' && f.negativeSign.length > 1 ||
+            typeof f.negativeSign !== 'undefined' && typeof f.positiveSign === 'undefined' && f.negativeSign === '')
+            throw new Error('At least one sign (pos/neg) has to be exactly one character long. The other can have a length' +
+                'of 0 or 1');
+
+        if (typeof f.digitCharacters !== 'undefined') {
+            f.digitCharacters = undefined;
+            console.warn('The digitCharacters option is not supported in this version. Value will be ignored');
+        }
+
+        if (typeof f.myriadMode !== 'undefined') {
+            f.myriadMode = undefined;
+            console.warn('The myriadMode option is not supported in this version. Value will be ignored');
+        }
+
+        if (typeof f.myriadCharacters !== 'undefined') {
+            f.myriadCharacters = undefined;
+            console.warn('The digitCharacters option is not supported in this version. Value will be ignored');
+        }
+
         this._formatter = new MoneyFormatter(f);
         this._input.value = this._inputValue = this._formatter.format(this._money);
+
+        this._posPrefix = this._formatter.prefix(false);
+        this._posSuffix = this._formatter.suffix(false);
+        this._negPrefix = this._formatter.prefix(true);
+        this._negSuffix = this._formatter.suffix(true);
+        this._posPrefixPattern = new RegExp('^' + esc(this._posPrefix));
+        this._posSuffixPattern = new RegExp(esc(this._posSuffix) + '$');
+        this._negPrefixPattern = new RegExp('^' + esc(this._negPrefix));
+        this._negSuffixPattern = new RegExp(esc(this._negSuffix) + '$');
     }
 
     /**
@@ -286,10 +364,19 @@ export class IntlCurrencyInput {
 
     /**
      * @desc Sets the current value held by the input. This implicitly determines the amount of decimal places displayed.
+     * If the input currently has a minimum and/or maximum defined and those have a different floating point precision
+     * from {@link value}, then those limits are removed.
      */
     public setValue(value: string) {
         this._money = new Money(value);
         this._input.value = this._inputValue = this._formatter.format(this._money);
+
+        if (this._min && this._min.floatingPointPrecision !== this._money.floatingPointPrecision)
+            this._min = null;
+        if (this._max && this._max.floatingPointPrecision !== this._money.floatingPointPrecision)
+            this._max = null;
+
+        this.fitInBoundaries();
     }
 
     /**
@@ -298,12 +385,22 @@ export class IntlCurrencyInput {
      * can be easily converted to a number but be careful as it may be larger than the largest integer.
      */
     public getValue() {
-        const prefix = this._formatter.prefix(this._money.isNegative);
-        const suffix = this._formatter.suffix(this._money.isNegative);
-        const prefixPattern: RegExp = new RegExp('^' + esc(prefix));
-        const suffixPattern: RegExp = new RegExp(esc(suffix) + '$');
-        let rawValue = this._input.value.replace(prefixPattern,'')
-            .replace(suffixPattern,'')
+
+
+        const negativePriority = this._formatter.positiveSign === '';
+
+        const posMatch: boolean = this._posPrefixPattern.test(this._input.value) && this._posSuffixPattern.test(this._input.value);
+        const negMatch: boolean = this._negPrefixPattern.test(this._input.value) && this._negSuffixPattern.test(this._input.value);
+
+        let rawValue = this._input.value
+            .replace(negativePriority ?
+                (negMatch ? this._negPrefixPattern : this._posPrefixPattern) :
+                (posMatch ? this._posPrefixPattern : this._negPrefixPattern)
+                ,'')
+            .replace(negativePriority ?
+                    (negMatch ? this._negSuffixPattern : this._posSuffixPattern) :
+                    (posMatch ? this._posSuffixPattern : this._negSuffixPattern)
+                ,'')
             .replace(RegExp(this._formatter.groupSeparator, 'g'), '')
             .replace(this._formatter.decimalSeparator, '.');
 
@@ -319,7 +416,7 @@ export class IntlCurrencyInput {
                 rawValue += '0';
             }
         }
-        if (this._money.isNegative)
+        if (negMatch)
             rawValue = '-' + rawValue;
         return rawValue;
     }
@@ -392,11 +489,37 @@ export class IntlCurrencyInput {
     }
 
     /**
-     * @desc Sets whether the user can enter negative values into the input. If the input is currently hold a negative
-     * value the negative sign will be dropped.
+     * @desc Sets the lowest possible value that the input can hold. Defaults to zero. Set to null to remove lower limit.
+     * Use this function to allow input of negative values.
      */
-    public allowNegativeValues(allow: boolean) {
+    public setMin(min: string | null) {
+        //TODO CURSOR POS
+        if (min === null) {
+            this._min = null;
+        } else {
+            const newMin = new Money(min);
+            if (newMin.floatingPointPrecision !== this._money.floatingPointPrecision)
+                throw new Error('Floating point accuracy of min has to be the same as the currently held value.');
+            if (this._max && newMin === MoneyCalculator.max(newMin, this._max))
+                throw new Error('Min cannot be larger than max.');
+            this._min = newMin;
+        }
+        this.fitInBoundaries();
+    }
 
+    public setMax(max: string | null) {
+        //TODO CURSOR POS
+        if (max === null) {
+            this._max = null;
+        } else {
+            const newMax = new Money(max);
+            if (newMax.floatingPointPrecision !== this._money.floatingPointPrecision)
+                throw new Error('Floating point accuracy of max has to be the same as the currently held value.');
+            if (this._min && newMax === MoneyCalculator.min(newMax, this._min))
+                throw new Error('Max cannot be smaller than min.');
+            this._max = newMax;
+        }
+        this.fitInBoundaries();
     }
 
 }

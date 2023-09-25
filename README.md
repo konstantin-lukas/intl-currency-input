@@ -6,6 +6,8 @@ accept validly formatted currency strings. This library is based on the
 check out the following CodePen:
 
 <font size="20" >[**Demo**](https://codepen.io/konstantin-lukas/pen/oNWzwOP)</font>
+
+<span style="color: red">If you are using React, please read the section at the bottom about using this library with React first.</span>
 ## Quickstart
 First install the package:
 ```
@@ -55,3 +57,63 @@ An input initialized like in the first example would display the following defau
 EUR 1 234 567,89€
 ```
 For detailed information on functionality please refer to this repo's documentation.
+
+## Using This Library With React
+When you are developing in React's strict mode you might encounter some unexpected behaviour, specifically when using
+the input's strict mode (which has nothing to do with React's strict mode; they are just named the same). This happens
+when you mount multiple `IntlCurrencyInputs` to the same `HTMLInputElement`. In React's strict mode, all effects get called
+twice to help you find bugs. This is just a reminder that you need to `unmount` the old currency input first or use
+`remout`. Below is an example of how to use this Library in React. Feel free to just copy the below code if you are using
+React.
+
+```tsx
+import React, {useEffect, useRef, useState} from "react";
+import IntlCurrencyInput from "intl-currency-input";
+import {DisplayOrder} from "moneydew";
+
+export default function CurrencyInput() {
+    /**
+     * @description This is a reference we pass to our component for mounting
+     */
+    const currencyInputElement = useRef<HTMLInputElement | null>(null);
+
+    /**
+     * @description This state contains our IntlCurrencyInput
+     */
+    const [currencyInput, setCurrencyInput] = useState<IntlCurrencyInput | null>(null);
+
+
+    let mounted = false; // See footnote
+    
+    // Create new currency input
+    useEffect(() => {
+        const input = currencyInputElement.current;
+        if (input && !currencyInput && !mounted) {
+            mounted = true;
+            const newInput = new IntlCurrencyInput(input, '0.00', {
+                currencyName: 'EUR',
+                currencySymbol: '€',
+                groupSeparator: ' ',
+                decimalSeparator: ',',
+                displayOrder: DisplayOrder.NAME_SIGN_NUMBER_SYMBOL,
+            });
+            setCurrencyInput(newInput);
+        }
+    }, []);
+    
+    // Remount if the currency element changes
+    useEffect(() => {
+        const input = currencyInputElement.current;
+        if (input && currencyInput)
+            currencyInput.remount(input);
+    }, [currencyInputElement]);
+    
+    return <Input ref={currencyInputElement} name="amount"/>;
+}
+```
+Footnote: In React's strict mode `useEffect` gets called twice and because React's state updates are asynchronous,
+it would create two IntlCurrencyInputs mounted to the same element. The reason for that is that both times `useEffect`
+gets called while `currencyInput` is still `null` as there is no guarantee that `setCurrencyInput` is executed
+immediately. Updating the `mounted` variable however happens immediately and helps us tell useEffect has been called already.
+I would recommend keeping the `mounted` variable even in production if you decide to do it this way because it's only
+a single boolean and surely won't hurt performance.

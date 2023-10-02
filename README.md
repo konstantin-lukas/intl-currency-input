@@ -71,49 +71,48 @@ import React, {useEffect, useRef, useState} from "react";
 import IntlCurrencyInput from "intl-currency-input";
 import {DisplayOrder} from "moneydew";
 
-export default function CurrencyInput() {
-    /**
-     * @description This is a reference we pass to our component for mounting
-     */
+export default function CurrencyInput({value, setValue}: {
+    value: string,
+    setValue: (value: string) => void
+}) {
     const currencyInputElement = useRef<HTMLInputElement | null>(null);
-
-    /**
-     * @description This state contains our IntlCurrencyInput
-     */
     const [currencyInput, setCurrencyInput] = useState<IntlCurrencyInput | null>(null);
+    const [valueState, setValueState] = useState(value);
 
-
-    let mounted = false; // See footnote
-    
-    // Create new currency input
     useEffect(() => {
         const input = currencyInputElement.current;
-        if (input && !currencyInput && !mounted) {
-            mounted = true;
-            const newInput = new IntlCurrencyInput(input, '0.00', {
+        if (input && !currencyInput) {
+            const newInput = new IntlCurrencyInput(input, value, {
                 currencyName: 'EUR',
                 currencySymbol: '€',
                 groupSeparator: ' ',
                 decimalSeparator: ',',
                 displayOrder: DisplayOrder.NAME_SIGN_NUMBER_SYMBOL,
             });
+            newInput.enableStrictMode();
+            newInput.validCallback(() => setValueState(newInput.getValue()));
             setCurrencyInput(newInput);
+            return () => {
+                newInput.unmount();
+            }
         }
+
     }, []);
-    
-    // Remount if the currency element changes
     useEffect(() => {
         const input = currencyInputElement.current;
         if (input && currencyInput)
             currencyInput.remount(input);
     }, [currencyInputElement]);
-    
-    return <Input ref={currencyInputElement} name="amount"/>;
+    useEffect(() => {
+        setValue(valueState);
+    }, [valueState]);
+    useEffect(() => {
+        if (currencyInput && valueState !== value) {
+            currencyInput.setValue(value);
+        }
+    }, [value]);
+    return (
+        <input ref={currencyInputElement} name="amount"/>
+    );
 }
 ```
-Footnote: In React's strict mode `useEffect` gets called twice and because React's state updates are asynchronous,
-it would create two IntlCurrencyInputs mounted to the same element. The reason for that is that both times `useEffect`
-gets called while `currencyInput` is still `null` as there is no guarantee that `setCurrencyInput` is executed
-immediately. Updating the `mounted` variable however happens immediately and helps us tell useEffect has been called already.
-I would recommend keeping the `mounted` variable even in production if you decide to do it this way because it's only
-a single boolean and surely won't hurt performance.

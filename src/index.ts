@@ -77,7 +77,6 @@ export default class IntlCurrencyInput {
         const posMatch: boolean = this._posPrefixPattern.test(this._input.value) && this._posSuffixPattern.test(this._input.value);
         const negMatch: boolean = this._negPrefixPattern.test(this._input.value) && this._negSuffixPattern.test(this._input.value);
 
-
         if (posMatch || negMatch) {
             const negativePriority = this._formatter.positiveSign === '';
             const matchedPrefix = negativePriority ?
@@ -138,7 +137,7 @@ export default class IntlCurrencyInput {
                     numberRegexPattern += '[1-9]\\d*' + esc(this._formatter.decimalSeparator) + '\\d{0,' + this._money.floatingPointPrecision + '})';
                 }
             } else {
-                numberRegexPattern += '[1-9]\\d*';
+                numberRegexPattern += '(0|[1-9]\\d*)';
             }
             numberRegexPattern += '$';
 
@@ -158,6 +157,8 @@ export default class IntlCurrencyInput {
             if (this._allowNegativeZero && rawValue.match(/^-0\.?0*$/)) {
                 rawValue = rawValue.substring(1);
             }
+
+
 
             if (valuePattern.test(rawValue)) {
                 const groupSize = this._formatter.groupSize;
@@ -200,6 +201,7 @@ export default class IntlCurrencyInput {
         } else {
             inputRejected = true;
         }
+
 
         /* istanbul ignore next */
         let caretPos = this._input.selectionStart === null ? 0 : this._input.selectionStart;

@@ -1,6 +1,6 @@
 {
   "name": "intl-currency-input",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "This library allows you to create input fields for currencies. Version 2 is completely overhauled, written in TypeScript and includes test cases.",
   "main": "index.js",
   "module": "index.mjs",
@@ -44,7 +44,7 @@
     "webpack-dev-server": "^4.15.1"
   },
   "dependencies": {
-    "moneydew": "^1.0.0"
+    "moneydew": "^1.0.1"
   },
   "files": [
     "index.d.ts",

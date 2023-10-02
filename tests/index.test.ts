@@ -181,6 +181,23 @@ describe('CurrencyInput', () => {
 
     });
 
+    it('should be usable for percentages', async () => {
+        input.format({
+            displayOrder: DisplayOrder.NAME_SIGN_NUMBER_SYMBOL,
+            currencyName: '',
+            currencySymbol: '%',
+            groupSeparator: '',
+            decimalSeparator: '.'
+        });
+        input.setValue('20');
+        await userEvent.type(inputElement,    '{backspace}', {
+            initialSelectionStart: 1,
+            initialSelectionEnd: 1,
+        });
+        expect(input.getValue()).toBe('0');
+        expect(inputElement.value).toBe('0%');
+    });
+
     it('should insert a zero when all numbers before decimal point are deleted', async () => {
         input.setValue('123.00');
 

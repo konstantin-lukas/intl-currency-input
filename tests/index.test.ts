@@ -196,6 +196,30 @@ describe('CurrencyInput', () => {
         });
         expect(input.getValue()).toBe('0');
         expect(inputElement.value).toBe('0%');
+
+        input.format({
+            currencyName
+                :
+                "USD",
+            currencySymbol
+                :
+                "$",
+            decimalSeparator
+                :
+                ",",
+            displayOrder
+                :
+                14,
+            groupSeparator
+                :
+                "."
+        });
+        await userEvent.type(inputElement,    'a', {
+            initialSelectionStart: 1,
+            initialSelectionEnd: 1,
+        });
+        expect(input.getValue()).toBe('0');
+        expect(inputElement.value).toBe('USD 0$');
     });
 
     it('should insert a zero when all numbers before decimal point are deleted', async () => {

@@ -145,7 +145,7 @@ export default class IntlCurrencyInput {
 
             const value = this._input.value.replace(matchedPrefixPattern,'').replace(matchedSuffixPattern,'');
 
-            let rawValue = value.replace(RegExp(this._formatter.groupSeparator, 'g'), '');
+            let rawValue = value.replace(RegExp(esc(this._formatter.groupSeparator), 'g'), '');
 
 
             if (new RegExp(`^${esc(this._formatter.decimalSeparator)}\\d*$`).test(rawValue)) {
@@ -429,7 +429,7 @@ export default class IntlCurrencyInput {
                     (negMatch ? this._negSuffixPattern : this._posSuffixPattern) :
                     (posMatch ? this._posSuffixPattern : this._negSuffixPattern)
                 ,'')
-            .replace(RegExp(this._formatter.groupSeparator, 'g'), '')
+            .replace(RegExp(esc(this._formatter.groupSeparator), 'g'), '')
             .replace(this._formatter.decimalSeparator, '.');
 
         const decimalPointIndex = rawValue.indexOf('.');

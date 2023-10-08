@@ -72,6 +72,14 @@ export default class IntlCurrencyInput {
             }
         }
 
+        // SET VALUE TO 0 IF USER DELETES ALL TEXT FROM INPUT
+        if (this._input.value === '') {
+            let nullValue = '0';
+            if (this._money.floatingPointPrecision > 0) {
+                nullValue += '.' + '0'.repeat(this._money.floatingPointPrecision);
+            }
+            this._input.value = this._formatter.format(new Money(nullValue));
+        }
 
         let inputRejected: boolean = false;
         const posMatch: boolean = this._posPrefixPattern.test(this._input.value) && this._posSuffixPattern.test(this._input.value);
@@ -156,6 +164,16 @@ export default class IntlCurrencyInput {
 
             if (this._allowNegativeZero && rawValue.match(/^-0\.?0*$/)) {
                 rawValue = rawValue.substring(1);
+            }
+
+
+            // REPLACE SINGLE LEADING ZERO
+            if (/^-?0[1-9](\.\d*)?$/.test(rawValue)) {
+                /* istanbul ignore next */
+                if (rawValue[0] === '-')
+                    rawValue = '-' + rawValue.substring(2);
+                else
+                    rawValue = rawValue.substring(1);
             }
 
 

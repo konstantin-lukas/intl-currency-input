@@ -387,6 +387,9 @@ describe('CurrencyInput', () => {
             initialSelectionStart: 0,
             initialSelectionEnd: 4,
         });
+        expect(inputElement.value).toBe('$0.00');
+        input.add('900.00');
+        expect(inputElement.value).toBe('$900.00');
 
 
         input.add('1800.00');

@@ -31,50 +31,58 @@ describe('Input features', () => {
     });
 
     it('should replace a single 0 before the comma with non zero values', async () => {
-        expect(inputElement.value).toBe('$0.00');
+        for (let i = 0; i < 2; i++) {
+            input.setValue('0.00');
+            expect(inputElement.value).toBe('$0.00');
 
-        await userEvent.type(inputElement,    '2', {
-            initialSelectionStart: 2,
-            initialSelectionEnd: 2,
-        });
+            await userEvent.type(inputElement,    '2', {
+                initialSelectionStart: 2,
+                initialSelectionEnd: 2,
+            });
 
-        expect(inputElement.value).toBe('$2.00');
-        expect(input.getValue()).toBe('2.00');
-        expect(input.getFormattedValue()).toBe('$2.00');
+            expect(inputElement.value).toBe('$2.00');
+            expect(input.getValue()).toBe('2.00');
+            expect(input.getFormattedValue()).toBe('$2.00');
 
-        input.setValue('0.00');
+            input.setValue('0.00');
 
-        await userEvent.type(inputElement,    '0', {
-            initialSelectionStart: 2,
-            initialSelectionEnd: 2,
-        });
+            await userEvent.type(inputElement,    '0', {
+                initialSelectionStart: 2,
+                initialSelectionEnd: 2,
+            });
 
-        expect(inputElement.value).toBe('$0.00');
-        expect(input.getValue()).toBe('0.00');
-        expect(input.getFormattedValue()).toBe('$0.00');
+            expect(inputElement.value).toBe('$0.00');
+            expect(input.getValue()).toBe('0.00');
+            expect(input.getFormattedValue()).toBe('$0.00');
+            input.enableStrictMode();
+        }
 
     });
 
     it('should set the value to 0 if the user deletes everything', async () => {
-        input.setValue('231.25');
-        expect(inputElement.value).toBe('$231.25');
-        await userEvent.type(inputElement,    '{backspace}', {
-            initialSelectionStart: 0,
-            initialSelectionEnd: 7,
-        });
 
-        expect(inputElement.value).toBe('$0.00');
-        expect(input.getValue()).toBe('0.00');
-        expect(input.getFormattedValue()).toBe('$0.00');
+        for (let i = 0; i < 2; i++) {
+            input.setValue('231.25');
+            expect(inputElement.value).toBe('$231.25');
+            await userEvent.type(inputElement,    '{backspace}', {
+                initialSelectionStart: 0,
+                initialSelectionEnd: 7,
+            });
 
-        input.setValue('-232.41');
-        expect(inputElement.value).toBe('-$232.41');
-        await userEvent.type(inputElement,    '{backspace}', {
-            initialSelectionStart: 0,
-            initialSelectionEnd: 8,
-        });
-        expect(inputElement.value).toBe('$0.00');
-        expect(input.getValue()).toBe('0.00');
-        expect(input.getFormattedValue()).toBe('$0.00');
+            expect(inputElement.value).toBe('$0.00');
+            expect(input.getValue()).toBe('0.00');
+            expect(input.getFormattedValue()).toBe('$0.00');
+
+            input.setValue('-232.41');
+            expect(inputElement.value).toBe('-$232.41');
+            await userEvent.type(inputElement,    '{backspace}', {
+                initialSelectionStart: 0,
+                initialSelectionEnd: 8,
+            });
+            expect(inputElement.value).toBe('$0.00');
+            expect(input.getValue()).toBe('0.00');
+            expect(input.getFormattedValue()).toBe('$0.00');
+            input.enableStrictMode();
+        }
     });
 });

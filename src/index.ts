@@ -55,6 +55,7 @@ export default class IntlCurrencyInput {
 
     private handleInput(e: InputEvent) {
         if (this._inputValue === this._input.value) return;
+        const wasEmptyString = this._input.value === '';
 
         if (this._formatter.positiveSign.length === 1 &&
             this._formatter.negativeSign.length === 1) {
@@ -80,6 +81,9 @@ export default class IntlCurrencyInput {
             }
             this._input.value = this._formatter.format(new Money(nullValue));
         }
+
+
+
 
         let inputRejected: boolean = false;
         const posMatch: boolean = this._posPrefixPattern.test(this._input.value) && this._posSuffixPattern.test(this._input.value);
@@ -108,7 +112,7 @@ export default class IntlCurrencyInput {
                     const end = this._input.selectionEnd === null ? 0 : this._input.selectionEnd;
                     const decimalSepPos = this._input.value.indexOf(this._formatter.decimalSeparator);
 
-                    if (start === end && start > decimalSepPos) {
+                    if (!wasEmptyString && start === end && start > decimalSepPos) {
                         let inputString = this._input.value;
                         if (e.inputType === 'insertText') {
                             inputString = inputString.slice(0, start).concat(inputString.slice(start + 1));
@@ -155,7 +159,6 @@ export default class IntlCurrencyInput {
 
             let rawValue = value.replace(RegExp(esc(this._formatter.groupSeparator), 'g'), '');
 
-
             if (new RegExp(`^${esc(this._formatter.decimalSeparator)}\\d*$`).test(rawValue)) {
                 rawValue = '0' + rawValue;
             } else if (rawValue === '') {
@@ -166,16 +169,10 @@ export default class IntlCurrencyInput {
                 rawValue = rawValue.substring(1);
             }
 
-
             // REPLACE SINGLE LEADING ZERO
             if (/^-?0[1-9](\.\d*)?$/.test(rawValue)) {
-                /* istanbul ignore next */
-                if (rawValue[0] === '-')
-                    rawValue = '-' + rawValue.substring(2);
-                else
-                    rawValue = rawValue.substring(1);
+                rawValue = rawValue.substring(1);
             }
-
 
 
             if (valuePattern.test(rawValue)) {

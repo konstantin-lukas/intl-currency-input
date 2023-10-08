@@ -54,8 +54,27 @@ describe('Input features', () => {
             expect(inputElement.value).toBe('$0.00');
             expect(input.getValue()).toBe('0.00');
             expect(input.getFormattedValue()).toBe('$0.00');
+
+
+            input.format({decimalSeparator: 'A'});
+            expect(inputElement.value).toBe('$0A00');
+            await userEvent.type(inputElement,    '9', {
+                initialSelectionStart: 2,
+                initialSelectionEnd: 2,
+            });
+            expect(inputElement.value).toBe('$9A00');
+            expect(input.getValue()).toBe('9.00');
             input.enableStrictMode();
+            input.format({});
+
         }
+        input.setValue('0');
+        expect(inputElement.value).toBe('$0');
+        await userEvent.type(inputElement,    '4', {
+            initialSelectionStart: 2,
+            initialSelectionEnd: 2,
+        });
+        expect(inputElement.value).toBe('$4');
 
     });
 
@@ -83,6 +102,16 @@ describe('Input features', () => {
             expect(input.getValue()).toBe('0.00');
             expect(input.getFormattedValue()).toBe('$0.00');
             input.enableStrictMode();
+
+
         }
+
+        input.setValue('6');
+        expect(inputElement.value).toBe('$6');
+        await userEvent.type(inputElement,    '{backspace}', {
+            initialSelectionStart: 0,
+            initialSelectionEnd: 2,
+        });
+        expect(inputElement.value).toBe('$0');
     });
 });

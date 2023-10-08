@@ -85,6 +85,7 @@ export default class IntlCurrencyInput {
 
 
 
+
         let inputRejected: boolean = false;
         const posMatch: boolean = this._posPrefixPattern.test(this._input.value) && this._posSuffixPattern.test(this._input.value);
         const negMatch: boolean = this._negPrefixPattern.test(this._input.value) && this._negSuffixPattern.test(this._input.value);
@@ -170,7 +171,7 @@ export default class IntlCurrencyInput {
             }
 
             // REPLACE SINGLE LEADING ZERO
-            if (/^-?0[1-9](\.\d*)?$/.test(rawValue)) {
+            if (new RegExp(`^0[1-9](${esc(this._formatter.decimalSeparator)}\\d*)?$`).test(rawValue)) {
                 rawValue = rawValue.substring(1);
             }
 

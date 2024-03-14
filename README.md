@@ -4,7 +4,6 @@
 ![NPM Downloads](https://img.shields.io/npm/dm/intl-currency-input?style=flat-square)
 ![Code Coverage](https://img.shields.io/coverallsCoverage/github/konstantin-lukas/intl-currency-input?style=flat-square)
 [![MIT License](https://img.shields.io/github/license/konstantin-lukas/intl-currency-input?style=flat-square)](https://raw.githubusercontent.com/konstantin-lukas/intl-currency-input/main/LICENSE)
-![Commit Activity](https://img.shields.io/github/commit-activity/m/konstantin-lukas/intl-currency-input?7&style=flat-square)
 ![Type Definitions](https://img.shields.io/npm/types/intl-currency-input?style=flat-square)
 ![Bundle Size](https://img.shields.io/bundlephobia/min/intl-currency-input?style=flat-square)
 

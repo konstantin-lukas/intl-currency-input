@@ -1,12 +1,14 @@
 # International Currency Input
 
+<div align="center">
+
 [![NPM Package](https://img.shields.io/npm/v/intl-currency-input?style=flat-square&logo=npm)](https://www.npmjs.com/package/intl-currency-input)
 ![NPM Downloads](https://img.shields.io/npm/dm/intl-currency-input?style=flat-square)
 ![Code Coverage](https://img.shields.io/coverallsCoverage/github/konstantin-lukas/intl-currency-input?style=flat-square)
 [![MIT License](https://img.shields.io/github/license/konstantin-lukas/intl-currency-input?style=flat-square)](https://raw.githubusercontent.com/konstantin-lukas/intl-currency-input/main/LICENSE)
 ![Type Definitions](https://img.shields.io/npm/types/intl-currency-input?style=flat-square)
 ![Bundle Size](https://img.shields.io/bundlephobia/min/intl-currency-input?style=flat-square)
-
+</div>
 
 This library provides a class that can mount to a text input and control that input to only
 accept validly formatted currency strings. This library is based on the 

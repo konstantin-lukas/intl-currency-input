@@ -1,11 +1,14 @@
 # International Currency Input
 
-![NPM Package](https://img.shields.io/badge/npm-v2.1.4-1188dd?style=flat-square&logo=npm)
+[![NPM Package](https://img.shields.io/npm/v/intl-currency-input?style=flat-square&logo=npm)](https://www.npmjs.com/package/intl-currency-input)
 ![NPM Downloads](https://img.shields.io/npm/dm/intl-currency-input?style=flat-square)
-![Code Coverage](https://img.shields.io/badge/Coverage-100%25-33bb33?style=flat-square)
-[![MIT License](https://img.shields.io/badge/License-MIT-33bb33?style=flat-square)](https://raw.githubusercontent.com/konstantin-lukas/intl-currency-input/main/LICENSE)
-[![GitHub Issues](https://img.shields.io/github/issues/konstantin-lukas/intl-currency-input.svg?style=flat-square&color=33bb33)](https://github.com/konstantin-lukas/intl-currency-input/issues)
-![Commit Activity](https://img.shields.io/github/commit-activity/m/konstantin-lukas/intl-currency-input?color=1188dd&style=flat-square)
+![Code Coverage](https://img.shields.io/coverallsCoverage/github/konstantin-lukas/intl-currency-input?style=flat-square)
+[![MIT License](https://img.shields.io/github/license/konstantin-lukas/intl-currency-input?style=flat-square)](https://raw.githubusercontent.com/konstantin-lukas/intl-currency-input/main/LICENSE)
+[![GitHub Issues](https://img.shields.io/github/issues/konstantin-lukas/intl-currency-input.svg?style=flat-square)](https://github.com/konstantin-lukas/intl-currency-input/issues)
+![Commit Activity](https://img.shields.io/github/commit-activity/m/konstantin-lukas/intl-currency-input?7&style=flat-square)
+![Type Definitions](https://img.shields.io/npm/types/intl-currency-input?style=flat-square)
+![Bundle Size](https://img.shields.io/bundlephobia/min/intl-currency-input?style=flat-square)
+
 
 This library provides a class that can mount to a text input and control that input to only
 accept validly formatted currency strings. This library is based on the 

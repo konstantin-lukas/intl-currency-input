@@ -1,6 +1,7 @@
 # International Currency Input
 
 ![NPM Package](https://img.shields.io/badge/npm-v2.1.4-1188dd?style=flat-square&logo=npm)
+![NPM Downloads](https://img.shields.io/npm/dm/intl-currency-input?style=flat-square)
 ![Code Coverage](https://img.shields.io/badge/Coverage-100%25-33bb33?style=flat-square)
 [![MIT License](https://img.shields.io/badge/License-MIT-33bb33?style=flat-square)](https://raw.githubusercontent.com/konstantin-lukas/intl-currency-input/main/LICENSE)
 [![GitHub Issues](https://img.shields.io/github/issues/konstantin-lukas/intl-currency-input.svg?style=flat-square&color=33bb33)](https://github.com/konstantin-lukas/intl-currency-input/issues)

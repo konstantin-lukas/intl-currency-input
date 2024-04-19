@@ -14,12 +14,12 @@ This library provides a class that can mount to a text input and control that in
 accept validly formatted currency strings. This library is based on the 
 [Moneydew](https://github.com/konstantin-lukas/moneydew) formatting library for currencies. Please note that version
 2.X.X has been completely overhauled. Try to avoid using version 1.X.X. To try the library, 
-check out the following CodePen:
+check out this  [CodePen](https://codepen.io/konstantin-lukas/pen/oNWzwOP).
+The [documentation](https://konstantin-lukas.github.io/intl-currency-input/) is easily accessible on GitHub Pages.
 
-<font size="20" >[**Demo**](https://codepen.io/konstantin-lukas/pen/oNWzwOP)</font>
-
-<span style="color: red">If you are using React, please read the section at the bottom about using this library with React first.</span>
 ## Quickstart
+Note: If you are using React, refer to the section at the bottom for a React-specific quickstart guide.
+
 First install the package:
 ```
 npm i -P intl-currency-input

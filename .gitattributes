@@ -1,5 +1,5 @@
 coverage/** linguist-vendored
 docs/** linguist-vendored
-jest.config.js linguist-vendored
-rollup.config.js linguist-vendored
-webpack.config.cjs linguist-vendored
+jest.config.js -linguist-vendored
+rollup.config.js -linguist-vendored
+webpack.config.cjs -linguist-vendored
